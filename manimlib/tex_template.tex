@@ -1,5 +1,23 @@
 \documentclass[preview]{standalone}
 
+\usepackage[landscape,a3paper]{geometry}
+
+\def\theLetterSpace{-1pt}
+\def\extraWordSpace{-1pt}
+\newcommand\spaceout[2][\theLetterSpace]{%
+  \def\LocalLetterSpace{#1}\expandafter\spaceouthelpA#2 \relax\relax}
+\def\spaceouthelpA#1 #2\relax{%
+  \spaceouthelpB#1\relax\relax%
+  \ifx\relax#2\else\kern\extraWordSpace\ \kern\LocalLetterSpace\spaceouthelpA#2\relax\fi
+}
+\def\spaceouthelpB#1#2\relax{%
+  #1%
+  \ifx\relax#2\else
+    \kern\LocalLetterSpace\spaceouthelpB#2\relax%
+  \fi
+}
+\def\textspA#1{\spaceout{#1}}
+
 \usepackage[english]{babel}
 \usepackage{amsmath}
 \usepackage{amssymb}
