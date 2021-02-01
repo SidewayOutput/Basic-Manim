@@ -1,6 +1,9 @@
 import numpy as np
 import os
 
+Project = r"Basic\,-\,Manim"
+PoweredBy = ("Sideway", r"$\,\cdot\,$", "Output")
+
 MEDIA_DIR = ""
 VIDEO_DIR = ""
 VIDEO_OUTPUT_DIR = ""
@@ -180,10 +183,10 @@ Y_AXIS = np.array((0., 1., 0.))
 Z_AXIS = np.array((0., 0., 1.))
 
 # Useful abbreviations for diagonals
-UL = UP + LEFT
-UR = UP + RIGHT
-DL = DOWN + LEFT
-DR = DOWN + RIGHT
+LU = UL = UP + LEFT
+RU = UR = UP + RIGHT
+LD = DL = DOWN + LEFT
+RD = DR = DOWN + RIGHT
 
 TOP = FRAME_Y_RADIUS * UP
 BOTTOM = FRAME_Y_RADIUS * DOWN
@@ -257,6 +260,22 @@ COLOR_MAP = {
     "GREEN_SCREEN": "#00FF00",
     "ORANGE": "#FF862F",
 }
+
+BLUE = "#58C4DD",
+TEAL = "#5CD0B3",
+GREEN = "#83C167",
+YELLOW = "#FFFF00",
+GOLD = "#F0AC5F",
+RED = "#FC6255",
+MAROON = "#C55F73",
+PURPLE = "#9A72AC",
+WHITE = "#FFFFFF"
+BLACK = "#000000"
+GRAY = "#888888"
+GREY = "#888888"
+PINK = "#D147BD"
+ORANGE = "#FF862F"
+
 PALETTE = list(COLOR_MAP.values())
 locals().update(COLOR_MAP)
 for name in [s for s in list(COLOR_MAP.keys()) if s.endswith("_C")]:
