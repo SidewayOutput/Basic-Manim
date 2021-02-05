@@ -66,6 +66,12 @@ def merge_dicts_recursively(*dicts):
     return result
 
 
+def merge_config_kwargs(self, kwargs):
+    kwargs = merge_dicts_recursively(self.CONFIG, kwargs)
+    digest_config(self, kwargs)
+    return kwargs
+
+
 def soft_dict_update(d1, d2):
     """
     Adds key values pairs of d2 to d1 only when d1 doesn't

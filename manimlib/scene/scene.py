@@ -8,11 +8,12 @@ import numpy as np
 
 from manimlib.animation.animation import Animation
 from manimlib.animation.creation import Write
+from manimlib.animation.fading import FadeOut
 from manimlib.animation.transform import MoveToTarget, ApplyMethod
 from manimlib.camera.camera import Camera
 from manimlib.constants import *
 from manimlib.container.container import Container
-from manimlib.mobject.mobject import Mobject
+from manimlib.mobject.mobject import Mobject, Group
 from manimlib.mobject.svg.tex_mobject import TextMobject
 from manimlib.scene.scene_file_writer import SceneFileWriter
 from manimlib.utils.iterables import list_update
@@ -271,6 +272,12 @@ class Scene(Container):
     def clear(self):
         self.mobjects = []
         self.foreground_mobjects = []
+        return self
+
+    def fadeout(self,run_time=1,pre_time=0.5,post_time=0.5):
+        self.wait(pre_time)
+        self.play(FadeOut(Group(*[each.suspend_updating() for each in [*self.foreground_mobjects,*self.mobjects]]),run_time=run_time))
+        self.wait(post_time)
         return self
 
     def get_mobjects(self):

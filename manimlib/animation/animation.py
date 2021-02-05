@@ -2,8 +2,10 @@ from copy import deepcopy
 
 import numpy as np
 
+from manimlib.container.container import Container
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.config_ops import digest_config
+from manimlib.utils.iterables import list_update
 from manimlib.utils.rate_functions import smooth
 
 
@@ -158,3 +160,59 @@ class Animation(object):
 
     def is_remover(self):
         return self.remover
+
+
+class AGroup(Animation):
+    CONFIG = {
+        "name": None,
+    }
+
+    def __init__(self, *animations, **kwargs):
+        Container.__init__(self, **kwargs)
+        self.subanimations = []
+        if self.name is None:
+            self.name = self.__class__.__name__
+        if not all([isinstance(m, (Animation)) for m in animations]):
+            raise Exception("All subanimations must be of type Animation")
+        self.add(*animations)
+
+    def __str__(self):
+        return str(self.name)
+
+    def add(self, *animations):
+        if self in animations:
+            raise Exception("Animation cannot contain self")
+        self.subanimations = list_update(self.subanimations, animations)
+        return self
+
+    def add_to_back(self, *animations):
+        self.remove(*animations)
+        self.subanimations = list(animations) + self.subanimations
+        return self
+
+    def remove(self, *animations):
+        for aobject in animations:
+            if aobject in self.subanimations:
+                self.subanimations.remove(aobject)
+        return self
+
+    # Family matters
+
+    def __getitem__(self, value):
+        self_list = self.split()
+        if isinstance(value, slice):
+            GroupClass = self.get_group_class()
+            return GroupClass(*self_list.__getitem__(value))
+        return self_list.__getitem__(value)
+
+    def __iter__(self):
+        return iter(self.split())
+
+    def __len__(self):
+        return len(self.split())
+
+    def get_group_class(self):
+        return AGroup
+
+    def split(self):
+        return self.subanimations

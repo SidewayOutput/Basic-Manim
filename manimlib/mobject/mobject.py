@@ -14,6 +14,7 @@ from manimlib.constants import *
 from manimlib.container.container import Container
 from manimlib.utils.color import color_gradient
 from manimlib.utils.color import interpolate_color
+from manimlib.utils.color import invert_color
 from manimlib.utils.iterables import list_update
 from manimlib.utils.iterables import remove_list_redundancies
 from manimlib.utils.paths import straight_path
@@ -586,6 +587,42 @@ class Mobject(Container):
         for mob in self.family_members_with_points():
             mob.add_background_rectangle(**kwargs)
         return self
+
+    # Add shadow
+    def add_shadow_mobjects(self, shadow=2, mobject=None, color=WHITE, opacity=0.9, shift=([0.03, -0.01, 0]), **kwargs):
+        from manimlib.mobject.types.vectorized_mobject import VGroup
+        group = VGroup()
+        if mobject == None:
+            mobject = self
+        if shadow == 2:
+            if isinstance(mobject, (Mobject)):
+                mobject_2 = mobject.copy()
+                mobject = mobject.copy()
+            if isinstance(color, (list, tuple)) and len(color) == 2:
+                color_2 = color[1]
+                color = color[0]
+            else:
+                color_2 = invert_color(color)
+            if isinstance(opacity, (list, tuple)) and len(opacity) == 2:
+                opacity_2 = opacity[1]
+                opacity = opacity[0]
+            else:
+                opacity_2 = opacity
+            if isinstance(shift, (tuple)) and len(shift) == 2:
+                shift_2 = shift[1]
+                shift = shift[0]
+            else:
+                shift_2 = [each * -1 for each in shift]
+            group.add(mobject_2.set_color(color_2).set_opacity(
+                opacity_2).shift(shift_2))  #
+        elif shadow == 1:
+            mobject = mobject.copy()
+        else:
+            return self
+        group.add(mobject.set_color(color).set_opacity(opacity).shift(shift))
+        self.remove(self.submobjects)
+        return self.add_to_back(group, **kwargs).push_self_into_submobjects()
+
 
     # Color functions
 
