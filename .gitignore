@@ -1,4 +1,6 @@
 __pycache__/
+.env
 *.doc
 media/tex/
 media/videos/
+sidewayoutput/
