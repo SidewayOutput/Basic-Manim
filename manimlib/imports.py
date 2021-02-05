@@ -97,6 +97,12 @@ from manimlib.utils.sounds import *
 from manimlib.utils.space_ops import *
 from manimlib.utils.strings import *
 
+from manimlib.basic.basic_animation import *
+from manimlib.basic.basic_complex import *
+from manimlib.basic.basic_compound import *
+from manimlib.basic.basic_function import *
+from manimlib.basic.basic_mobject import *
+
 # Non manim libraries that are also nice to have without thinking
 
 import inspect
