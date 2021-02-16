@@ -13,4 +13,4 @@ All files in the directory `manim-19Dec19-3b1b-archive` are copyright 3Blue1Brow
 The general purpose animation code found in the remainder of the repository, on the other hand, 
 is under the MIT license.
 
-Please refer to [3b1b-LICENSE](3b1b-LICENSE) and [LICENSE](SidewayOutput-LICENSE) for details.
+Please refer to [3b1b-LICENSE](3b1b-LICENSE) and [SidewayOutput-LICENSE](SidewayOutput-LICENSE) for details.
