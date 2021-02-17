@@ -1,40 +1,40 @@
 # folder/file: tutorial/basicmanim/basicmanim_transform_001a.py
 
-import numpy as np
 
 from manimlib.animation.composition import AnimationGroup
 from manimlib.animation.creation import ShowCreation, Write
 from manimlib.animation.fading import FadeIn
 from manimlib.animation.growing import GrowFromCenter
-from manimlib.animation.transform import ApplyMethod, ClockwiseTransform, CounterclockwiseTransform, MoveToTarget, Transform, ReplacementTransform, TransformFromCopy
-from manimlib.scene.scene import Scene
+from manimlib.animation.transform import ApplyMethod, ClockwiseTransform, CounterclockwiseTransform, MoveToTarget, ReplacementTransform, Transform, TransformFromCopy
 from manimlib.basic.basic_complex import StartScreens01, EndScreen01
+from manimlib.basic.basic_function import axes_point, coord_grid
 from manimlib.mobject.geometry import Circle, Dot, Line, Square
 from manimlib.mobject.mobject import Group
 from manimlib.mobject.svg.tex_mobject import TextMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.basic.basic_function import axes_array, coord_array
+from manimlib.scene.scene import Scene
 
 
 class basicmanim_transform_001a(Scene):
 
     def construct(self):
-        try:
-            self.add_sound(
-                "sidewayoutput\\basicmanim\\transform001a_01_01_01_01_01.wav", time_offset=18)
-            self.add_sound(
-                "sidewayoutput\\basicmanim\\transform001a_01_01_01_02_01.wav", time_offset=93)
-            self.add_sound(
-                "sidewayoutput\\basicmanim\\transform001a_01_01_01_03_01.wav", time_offset=135)
-        except:
-            pass
-        self.play(StartScreens01(
-            [], [],
-            [[r"\textbf{\textit{Basic-Manim from }\{Sideway\}}"],
-             [r"\textbf{\textit{Transform}}\\{{Part\ \textspA{I}a}"],
-             [r"\tiny{\textrm{basic-manim.210200551v0\_transform001a}}"],
-             [],
-             [r"\scriptsize{\textbf{Warning:\ The\ content\ may\ contain\ errors,\ mistakes\ and\ inaccuracies.\ Information\ must\ be\ verified\ and\ evaluated\ before\ use.}}"]],))
+        if 1 == 1:
+            try:
+                self.add_sound(
+                    "sidewayoutput\\basicmanim\\transform001a_01_01_01_01_01.wav", time_offset=18)
+                self.add_sound(
+                    "sidewayoutput\\basicmanim\\transform001a_01_01_01_02_01.wav", time_offset=93)
+                self.add_sound(
+                    "sidewayoutput\\basicmanim\\transform001a_01_01_01_03_01.wav", time_offset=135)
+            except:
+                pass
+            self.play(StartScreens01(
+                [], [],
+                [[r"\textbf{\textit{Basic-Manim from }\{Sideway\}}"],
+                 [r"\textbf{\textit{Transform}}\\{{Part\ \textspA{I}a}"],
+                 [r"\tiny{\textrm{basic-manim.210200551v0\_transform001a}}"],
+                 [],
+                 [r"\scriptsize{\textbf{Warning:\ The\ content\ may\ contain\ errors,\ mistakes\ and\ inaccuracies.\ Information\ must\ be\ verified\ and\ evaluated\ before\ use.}}"]],))
         if 1 == 1:
             self.play(GrowFromCenter(TextMobject(
                 r"\textit{\textbf{\underline{Transform}}}").shift([0, 3.6, 0])))
@@ -63,7 +63,7 @@ class basicmanim_transform_001a(Scene):
             self.play(GrowFromCenter(TextMobject(
                 r"\textit{\textbf{\underline{Paths\ of\ Transform}}}").shift([0, 3.6, 0])))
             rows, cols = (7, 5)
-            x0, y0 = axes_array([0, 2, cols-1, -4], [2.3, -1, rows-1, 3])
+            x0, y0 = axes_point([0, 2, cols-1, -4], [2.3, -1, rows-1, 3])
             txtx = ["loc 1", "loc 2", "m1", "m2"]
             txty = ["ClockwiseTransform", "Transform",
                     "CounterclockwiseTransform"]
@@ -80,13 +80,16 @@ class basicmanim_transform_001a(Scene):
                     lambda mob, obj=a2[j-1], x=x0[4], y=y0[j]: mob.become(obj.copy().move_to([x, y, 0]))).suspend_updating())
             self.play(FadeIn(Group(
                 *[TextMobject(txtx[i]).move_to(each)
-                  for i, each in enumerate(coord_array(x0[1:], y0[0:1]))],
+                  for i, each in enumerate(coord_grid(x0[1:], y0[0:1]))],
                 *[TextMobject(txty[i]).move_to(each)
-                  for i, each in enumerate(coord_array(x0[0:1], y0[1::2]))],
-                *[Dot(each) for each in coord_array(x0[1:3], y0[1:])],
+                  for i, each in enumerate(coord_grid(x0[0:1], y0[1::2]))],
+                *[Dot(each) for each in coord_grid(x0[1:3], y0[1:])],
                 TextMobject(r"$\rightarrow$").move_to(
                     ([(x0[1]+x0[2])/2, y0[0], 0])),
-                a1[::2], a2[::2], a3, a4,
+                a1[::2],
+                a2[::2],
+                a3,
+                a4,
                 *[Square(stroke_width=2, color="#FFFF00", fill_opacity=0.3).add_updater(
                     lambda mob, obj=obj:mob.surround(obj, stretch=True, buff=0.2)) for obj in a1],
                 *[Square(stroke_width=2, color="#DC75CD").add_updater
@@ -111,7 +114,7 @@ class basicmanim_transform_001a(Scene):
             self.play(GrowFromCenter(TextMobject(
                 r"\textit{\textbf{\underline{Methods\ of\ Transform}}}").shift([0, 3.6, 0])))
             rows, cols = (9, 5)
-            x0, y0 = axes_array([0, 2, cols-1, -4], [2.3, -0.8, rows-1, 3])
+            x0, y0 = axes_point([0, 2, cols-1, -4], [2.3, -0.8, rows-1, 3])
             txtx = ["loc 1", "loc 2", "m1", "m2"]
             txty = ["Transform", "ReplacementTransform",
                     "TransformFromCopy", "MoveToTarget"]
@@ -130,10 +133,10 @@ class basicmanim_transform_001a(Scene):
             a1[7].target = a2[7]
             self.play(FadeIn(Group(
                 *[TextMobject(txtx[i]).move_to(each)
-                  for i, each in enumerate(coord_array(x0[1:], y0[0:1]))],
+                  for i, each in enumerate(coord_grid(x0[1:], y0[0:1]))],
                 *[TextMobject(txty[i]).move_to(each)
-                  for i, each in enumerate(coord_array(x0[0:1], y0[1::2]))],
-                *[Dot(each) for each in coord_array(x0[1:3], y0[1:])],
+                  for i, each in enumerate(coord_grid(x0[0:1], y0[1::2]))],
+                *[Dot(each) for each in coord_grid(x0[1:3], y0[1:])],
                 TextMobject(r"$\rightarrow$").move_to(
                     ([(x0[1]+x0[2])/2, y0[0], 0])),
                 a1[::2],
@@ -162,5 +165,6 @@ class basicmanim_transform_001a(Scene):
             self.play(ApplyMethod(
                 a1.shift, ([0.3, 0, 0])), run_time=5)
             self.fadeout()
-        self.play(EndScreen01())
+        if 1 == 1:
+            self.play(EndScreen01())
         self.wait(5)
