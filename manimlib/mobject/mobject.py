@@ -80,6 +80,10 @@ class Mobject(Container):
                 self.submobjects.remove(mobject)
         return self
 
+    def add_as_foreground(self, scene):
+        scene.add_foreground_mobject(self)
+        return self
+
     def get_array_attrs(self):
         return ["points"]
 
@@ -622,7 +626,6 @@ class Mobject(Container):
         group.add(mobject.set_color(color).set_opacity(opacity).shift(shift))
         self.remove(self.submobjects)
         return self.add_to_back(group, **kwargs).push_self_into_submobjects()
-
 
     # Color functions
 

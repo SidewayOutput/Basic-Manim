@@ -65,11 +65,28 @@ def merge_dicts_recursively(*dicts):
             result[key] = value
     return result
 
+def generate_args(obj, args, instance_args, dim=1):
+    args = list(args)
+    instance_args = list(instance_args)
+    x = len(args)
+    if dim > 1:
+        args = args+([[]]*dim)[x:]
+        for i in range(dim):
+            args[i] = args[i]+instance_args[i][len(args):]
+    else:
+        args = args+instance_args[len(args):]
+    return args
 
-def merge_config_kwargs(self, kwargs):
+
+def merge_config_kwargs(self, kwargs, args=None):
     kwargs = merge_dicts_recursively(self.CONFIG, kwargs)
     digest_config(self, kwargs)
+    if args != None:
+        [kwargs.pop(key)
+         for key in list(it.chain.from_iterable(args)) if key in kwargs and kwargs != None]
     return kwargs
+def generate_args_kwargs(obj,args,kwargs,self_args_name,self_args):
+    return *generate_args(obj,args, self_args),merge_config_kwargs(obj,kwargs, self_args_name)
 
 
 def soft_dict_update(d1, d2):

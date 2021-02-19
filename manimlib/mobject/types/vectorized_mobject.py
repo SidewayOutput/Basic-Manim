@@ -402,6 +402,12 @@ class VMobject(Mobject):
     def get_points(self):
         return np.array(self.points)
 
+    def get_counting_points(self):
+        points = self.get_anchors()
+        if self.is_closed()!=True:
+            points=[*points,*self.points[-1:-3:-1]]
+        return points[::2]
+
     def set_anchors_and_handles(self, anchors1, handles1, handles2, anchors2):
         assert(len(anchors1) == len(handles1) ==
                len(handles2) == len(anchors2))

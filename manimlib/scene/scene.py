@@ -8,7 +8,7 @@ import numpy as np
 
 from manimlib.animation.animation import Animation
 from manimlib.animation.creation import Write
-from manimlib.animation.fading import FadeOut
+from manimlib.animation.fading import FadeIn,FadeOut
 from manimlib.animation.transform import MoveToTarget, ApplyMethod
 from manimlib.camera.camera import Camera
 from manimlib.constants import *
@@ -274,9 +274,22 @@ class Scene(Container):
         self.foreground_mobjects = []
         return self
 
-    def fadeout(self,run_time=1,pre_time=0.5,post_time=0.5):
+    def fadein(self,*mobjects,run_time=1,pre_time=0.5,post_time=1):
         self.wait(pre_time)
-        self.play(FadeOut(Group(*[each.suspend_updating() for each in [*self.foreground_mobjects,*self.mobjects]]),run_time=run_time))
+        self.play(FadeIn(Group(*mobjects)))
+        self.wait(post_time)
+        return self
+
+    def fadeout(self,run_time=1,pre_time=0.5,post_time=0.5,exclude_mobjs=None):
+        mobjarray=self.mobjects
+        if exclude_mobjs=="foreground":     
+            mobjarray.remove(*self.foreground_mobjects)
+        elif isinstance(exclude_mobjs,(Mobject,Group)):
+            mobjarray.remove(*exclude_mobjs)
+        else:
+            self.foreground_mobjects=[]
+        self.wait(pre_time)
+        self.play(FadeOut(Group(*[each.suspend_updating() for each in mobjarray]),run_time=run_time))
         self.wait(post_time)
         return self
 
