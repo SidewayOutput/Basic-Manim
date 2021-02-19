@@ -1,8 +1,8 @@
 import numpy as np
+from manimlib.mobject.mobject import Mobject
 
 
 def axes_point(*line_space_array):
-    # items=line
     return [axis_point(each) for each in line_space_array]
 
 
@@ -21,4 +21,58 @@ def axis_point(line_space):
 
 
 def coord_grid(x, y, z=[0]):
-    return list(zip(*list(np.array_split(np.array((np.broadcast_arrays(*[each[(slice(None),)+(None,)*i] for i, each in enumerate(map(np.asarray, [x, y, z]))]))).flat, 3))))
+    return np.array(list(zip(*list(np.array_split(np.array(list(np.broadcast_arrays(*[each[(slice(None),)+(None,)*i] for i, each in enumerate(map(np.asarray, [x, y, z]))]))).flat, 3))))).tolist()
+
+
+def to_get_point(mobject_or_point):
+    try:
+        mobject_or_point = mobject_or_point.get_center()
+    except:
+        pass
+    return mobject_or_point
+
+
+def to_expand_lists(lists, shape=None, fill=0):
+    x, y = np.shape(lists)
+    if shape == None:
+        result = np.zeros((x, 3))
+        result[:x, :y] = lists
+        return result
+
+
+def to_get_offset_lists(mobject_or_point, offset):
+    mobject_or_point = to_get_point(mobject_or_point)
+    dim = len(mobject_or_point)
+    mobject_or_point = np.repeat([mobject_or_point], dim, axis=0)
+    point_array = to_expand_lists(mobject_or_point)
+    for i, each in enumerate(offset):
+        if isinstance(each, (int, float)):
+            offset[i] = (
+                point_array+to_expand_lists(np.identity(dim))*each).tolist()
+        elif isinstance(each, (list)):
+            offset[i] = (point_array+to_expand_lists(np.identity(
+                dim))*(each+[0, 0, 0])[:dim]).tolist()
+        elif isinstance(each, (tuple)):
+            offset[i] = ((1-to_expand_lists(np.identity(
+                dim)))*point_array + to_expand_lists(np.identity(
+                    dim))*(list(each)+[0, 0, 0])[:dim]).tolist()
+    return offset
+
+
+def to_get_product(obj, n):
+    if isinstance(obj, Mobject):
+        return to_get_product(obj.get_center, n)
+    if isinstance(obj, (int, float)):
+        return obj*n
+    if isinstance(obj, list):
+        return list(each*n for each in obj)
+    if isinstance(obj, tuple):
+        return tuple(each*n for each in obj)
+
+
+def to_get_offsets(obj, n=2):
+    return [to_get_product(obj, (-1)**i/n) for i in range(1, -1, -1)]
+
+
+def to_get_zlist(*lists):
+    return list(np.array(lists, dtype=object).T.flat)
