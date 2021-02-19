@@ -1,4 +1,4 @@
-# folder/file: tutorial/basicmanim/basicmanim_transform_001b.py
+# folder/file: tutorial/basicmanim/001/basicmanim_transform_001b.py
 
 import numpy as np
 

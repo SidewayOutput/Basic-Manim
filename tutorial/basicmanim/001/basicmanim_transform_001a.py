@@ -1,4 +1,4 @@
-# folder/file: tutorial/basicmanim/basicmanim_transform_001a.py
+# folder/file: tutorial/basicmanim/001/basicmanim_transform_001a.py
 
 
 from manimlib.animation.composition import AnimationGroup
