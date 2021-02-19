@@ -2,7 +2,7 @@ Manim from [github.com/3b1b/manim](https://github.com/3b1b/manim) is an animatio
 by [github.com/3b1b](https://github.com/3b1b).
 
 The aim of project "Basic-Manim" is to test and update basic manim features based on 
-manim-19Dec19-3b1b for SidewayOutput Projects.
+[manim-19Dec19-3b1b](https://github.com/3b1b/manim/tree/ba2f2f8840df37b2e7de2841c961d9a02b03c9e4) for SidewayOutput Projects.
 
 ## Installation for Windows 10
 ### System Preparation
@@ -11,7 +11,7 @@ manim-19Dec19-3b1b for SidewayOutput Projects.
 3. Install [MiKTeX](https://miktex.org/download)
 
 ### Anaconda Install
-1. Install [Anaconda]( https://www.anaconda.com/products/individual)
+1. Install [Anaconda](https://www.anaconda.com/products/individual)
 
 #### Create a Conda Enviroment for Basic-Manim
 1. Open Anaconda Prompt
