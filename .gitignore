@@ -1,6 +1,11 @@
 __pycache__/
 .env
+*.aux
 *.doc
+*.dvi
+*.log
+/*.svg
+/*.tex
 media/tex/
 media/videos/
 sidewayoutput/
