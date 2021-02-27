@@ -5,9 +5,13 @@ The aim of project "Basic-Manim" is to test and update basic manim features base
 [manim-19Dec19-3b1b](https://github.com/3b1b/manim/tree/ba2f2f8840df37b2e7de2841c961d9a02b03c9e4) for SidewayOutput Projects.
 
 ## Installation for Windows 10
+### Download Basic-Manim
+1. Download ['Basic-Manim' files](https://github.com/SidewayOutput/Basic-Manim/archive/main.zip)
+2. Unzip 'Basic-Manim' files to a working directory
+
 ### System Preparation
-1. Install [ffmpeg](https://www.ffmpeg.org),
-2. Install [sox](http://sox.sourceforge.net),
+1. Install [ffmpeg](https://www.ffmpeg.org)
+2. Install [sox](http://sox.sourceforge.net)
 3. Install [MiKTeX](https://miktex.org/download)
 
 ### Anaconda Install
@@ -30,8 +34,8 @@ The aim of project "Basic-Manim" is to test and update basic manim features base
 9. ... others when necessary
 
 #### Using Basic-Manim Under enviroment 'manim'
-1. change directory to the working directory with 'Basic-Manim' files
-2. run `python -m manim tutorial\basicmanim\basicmanim_transform_001a.py -pl` 
+1. Change directory to the working directory containing the unzipped 'Basic-Manim' files
+2. Run `python -m manim tutorial\basicmanim\basicmanim_transform_001a.py -pl` to verify the installation
 
 ## License
 
