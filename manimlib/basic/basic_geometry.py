@@ -216,3 +216,77 @@ class GeomSquare(GeomRectangle):
             *args[1:],
             **kwargs
         )
+
+class GeomArrow(GeomLine):
+    CONFIG = {
+        "stroke_width": 6,
+        "buff": 0,
+        "max_tip_length_to_length_ratio": 0.25,
+        "max_stroke_width_to_length_ratio": 5,
+        "preserve_tip_size_when_scaling": True,
+    }
+
+    def __init__(self, *args, **kwargs):
+        GeomLine.__init__(self, *args, **kwargs)
+        # TODO, should this be affected when
+        # Arrow.set_stroke is called?
+        self.initial_stroke_width = self.stroke_width
+        self.add_tip(**kwargs)
+        self.set_stroke_width_from_length()
+
+    def scale(self, factor, **kwargs):
+        if self.get_length() == 0:
+            return self
+
+        has_tip = self.has_tip()
+        has_start_tip = self.has_start_tip()
+        if has_tip or has_start_tip:
+            old_tips = self.pop_tips()
+
+        VMobject.scale(self, factor, **kwargs)
+        self.set_stroke_width_from_length()
+
+        # So horribly confusing, must redo
+        if has_tip:
+            self.add_tip()
+            old_tips[0].points[:, :] = self.tip.points
+            self.remove(self.tip)
+            self.tip = old_tips[0]
+            self.add(self.tip)
+        if has_start_tip:
+            self.add_tip(at_start=True)
+            old_tips[1].points[:, :] = self.start_tip.points
+            self.remove(self.start_tip)
+            self.start_tip = old_tips[1]
+            self.add(self.start_tip)
+        return self
+
+    def get_normal_vector(self):
+        p0, p1, p2 = self.tip.get_start_anchors()[:3]
+        return normalize(np.cross(p2 - p1, p1 - p0))
+
+    def reset_normal_vector(self):
+        self.normal_vector = self.get_normal_vector()
+        return self
+
+    def get_default_tip_length(self):
+        max_ratio = self.max_tip_length_to_length_ratio
+        return min(
+            self.tip_length,
+            max_ratio * self.get_length(),
+        )
+
+    def set_stroke_width_from_length(self):
+        max_ratio = self.max_stroke_width_to_length_ratio
+        self.set_stroke(
+            width=min(
+                self.initial_stroke_width,
+                max_ratio * self.get_length(),
+            ),
+            family=False,
+        )
+        return self
+
+    # TODO, should this be the default for everything?
+    def copy(self):
+        return self.deepcopy()

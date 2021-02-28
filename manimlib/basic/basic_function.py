@@ -1,4 +1,6 @@
 import numpy as np
+import copy
+
 from manimlib.mobject.mobject import Mobject
 
 
@@ -24,20 +26,24 @@ def coord_grid(x, y, z=[0]):
     return np.array(list(zip(*list(np.array_split(np.array(list(np.broadcast_arrays(*[each[(slice(None),)+(None,)*i] for i, each in enumerate(map(np.asarray, [x, y, z]))]))).flat, 3))))).tolist()
 
 
-def to_get_point(mobject_or_point):
-    try:
+def to_get_point(mobject_or_point, default=[0, 0, 0]):
+    if isinstance(mobject_or_point, (Mobject)):
         mobject_or_point = mobject_or_point.get_center()
-    except:
-        pass
+    elif isinstance(mobject_or_point, (int,float)):
+        mobject_or_point = default.point_from_proportion(mobject_or_point)
+    elif isinstance(mobject_or_point, str) and mobject_or_point == "get_center()":
+        mobject_or_point = default.get_center()
     return mobject_or_point
 
 
-def to_expand_lists(lists, shape=None, fill=0):
-    x, y = np.shape(lists)
+def to_expand_lists(lists, shape=None, fill=None):
     if shape == None:
+        x, y = np.shape(lists)
         result = np.zeros((x, 3))
         result[:x, :y] = lists
         return result
+    else:
+        return (np.ones(np.shape(shape))*lists).tolist()
 
 
 def to_get_offset_lists(mobject_or_point, offset):
@@ -74,5 +80,13 @@ def to_get_offsets(obj, n=2):
     return [to_get_product(obj, (-1)**i/n) for i in range(1, -1, -1)]
 
 
-def to_get_zlist(*lists):
-    return list(np.array(lists, dtype=object).T.flat)
+def to_get_zlist(*lists, n=True):
+    if isinstance(n, bool) and n == True:
+        return list(np.array(lists, dtype=object).T.flat)
+    elif isinstance(n, int):
+        return to_get_zlist([lists]*n)
+    elif isinstance(n, tuple):
+        lists = list(lists)
+        return [y for x in [copy.deepcopy(*lists) for i in range(n[0])] for y in x]
+    else:
+        return lists

@@ -1,7 +1,12 @@
+from numpy import ndarray
+
+from manimlib.constants import DOWN, LEFT
 from manimlib.mobject.mobject import Group, Mobject
 from manimlib.mobject.numbers import DecimalNumber, Integer
-from manimlib.mobject.svg.tex_mobject import TextMobject
+from manimlib.mobject.svg.tex_mobject import TexMobject, TextMobject
 from manimlib.mobject.types.image_mobject import ImageMobject
+from manimlib.mobject.types.vectorized_mobject import VGroup, VMobject
+from manimlib.animation.transform import ApplyFunction, ApplyMethod, ScaleInPlace
 
 
 class MobjectOrChars(TextMobject):
@@ -31,6 +36,45 @@ class MobjectOrChars(TextMobject):
             self.become(mobject)
         self.name = mobject.name
         self.__class__ = mobject.__class__
+
+
+class OrderedMobject(MobjectOrChars):
+    def __init__(self, mobject_Or_chars, group,
+                 direction=DOWN, alignment=LEFT, shift=[0, 0, 0], buffer=0.08,
+                 width=None, height=None, scale=1, **kwargs):
+        MobjectOrChars.__init__(self, mobject_Or_chars, **kwargs)
+        self = MobjectOrChars(mobject_Or_chars)
+        if isinstance(self, (TextMobject, TexMobject)):
+            if mobject_Or_chars in ["$ $", " ", ".", "$.$"]:
+                self[0][0].stretch_to_fit_width(0.00000001)
+        try:
+            if isinstance(width, Mobject):
+                width = width.get_width()
+            else:
+                if isinstance(width[0], Mobject):
+                    width = width[0].get_width()
+        except:
+            pass
+        for i, each in enumerate([width, height]):
+            if each != None:
+                if isinstance(each, list) and self.length_over_dim(i) > each[0]:
+                    self.rescale_to_fit(each[0], 0, True)
+                elif isinstance(each, tuple):
+                    self.rescale_to_fit(
+                        each[0]*self.length_over_dim(i), 1, True)
+                elif isinstance(each, (int, float)):
+                    self.rescale_to_fit(each, i, False)
+        self.add_updater(lambda mob, ref_pt=group[-1], d=direction, a=alignment,
+                         s=shift, b=buffer: mob.next_to(ref_pt, d, b, a)).add_to_group(group)
+
+
+class GroupedMobject(VGroup):
+    def __init__(self, mobject_or_chars):
+        VMobject.__init__(self)
+        if not isinstance(mobject_or_chars, (list, tuple, ndarray)):
+            mobject_or_chars = [mobject_or_chars]
+        mobject = Group(*[MobjectOrChars(each) for each in mobject_or_chars])
+        self.add(*mobject)
 
 
 class ImageMobjectGroup(Group):
