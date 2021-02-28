@@ -7,9 +7,11 @@ from tqdm import tqdm as ProgressDisplay
 import numpy as np
 
 from manimlib.animation.animation import Animation
-from manimlib.animation.creation import Write
-from manimlib.animation.fading import FadeIn,FadeOut
+from manimlib.animation.creation import Write, ShowSubmobjectsOneByOne
+from manimlib.animation.fading import FadeIn, FadeOut
+from manimlib.animation.growing import GrowFromCenter, DiminishToCenter
 from manimlib.animation.transform import MoveToTarget, ApplyMethod
+from manimlib.basic.basic_mobject import MobjectOrChars, GroupedMobject
 from manimlib.camera.camera import Camera
 from manimlib.constants import *
 from manimlib.container.container import Container
@@ -274,22 +276,62 @@ class Scene(Container):
         self.foreground_mobjects = []
         return self
 
-    def fadein(self,*mobjects,run_time=1,pre_time=0.5,post_time=1):
+    def fadein(self, *mobjects, run_time=1, pre_time=0.5, post_time=1):
         self.wait(pre_time)
         self.play(FadeIn(Group(*mobjects)))
         self.wait(post_time)
         return self
 
-    def fadeout(self,run_time=1,pre_time=0.5,post_time=0.5,exclude_mobjs=None):
-        mobjarray=self.mobjects
-        if exclude_mobjs=="foreground":     
+    def fadeout(self, run_time=1, pre_time=0.5, post_time=0.5, exclude_mobjs=None):
+        mobjarray = self.mobjects
+        if exclude_mobjs == "foreground":
             mobjarray.remove(*self.foreground_mobjects)
-        elif isinstance(exclude_mobjs,(Mobject,Group)):
+        elif isinstance(exclude_mobjs, (Mobject, Group)):
             mobjarray.remove(*exclude_mobjs)
         else:
-            self.foreground_mobjects=[]
+            self.foreground_mobjects = []
         self.wait(pre_time)
-        self.play(FadeOut(Group(*[each.suspend_updating() for each in mobjarray]),run_time=run_time))
+        self.play(FadeOut(Group(*[each.suspend_updating()
+                                  for each in mobjarray]), run_time=run_time))
+        self.wait(post_time)
+        return self
+
+    def grow(self, *mobject_or_chars, run_time=1, pre_time=0.5, post_time=1, **kwargs):
+        '''
+        if not isinstance(mobject_or_chars, (list,tuple,np.ndarray)):
+            mobject_or_chars=[mobject_or_chars]
+        mobject = Group(*[MobjectOrChars(each) for each in mobject_or_chars])
+        '''
+        mobject = GroupedMobject(mobject_or_chars)
+        keys = ["shift", "scale", "move_to"]
+        [exec("mobject."+key+"(["+','.join(str(x) for x in kwargs.get(key))+"])",
+              {"mobject": mobject}) for key in keys if key in kwargs]
+        self.wait(pre_time)
+        self.play(GrowFromCenter(mobject))
+        self.wait(post_time)
+        return self
+
+    def diminish(self, *mobject_or_chars, run_time=1, pre_time=0.5, post_time=1, **kwargs):
+        if not isinstance(mobject_or_chars, (list, tuple, np.ndarray)):
+            mobject_or_chars = [mobject_or_chars]
+        mobject = Group(*[MobjectOrChars(each) for each in mobject_or_chars])
+        keys = ["shift"]
+        [exec("mobject."+key+"(["+','.join(str(x) for x in kwargs.get(key))+"])",
+              {"mobject": mobject}) for key in keys if key in kwargs]
+        self.wait(pre_time)
+        self.play(DiminishToCenter(mobject))
+        self.wait(post_time)
+        return self
+
+    def onebyone(self, *mobject_or_chars, run_time=1, pre_time=0.5, post_time=1, **kwargs):
+        if not isinstance(mobject_or_chars, (list, tuple, np.ndarray)):
+            mobject_or_chars = [mobject_or_chars]
+        mobject = Group(*[MobjectOrChars(each) for each in mobject_or_chars])
+        keys = ["shift"]
+        [exec("mobject."+key+"(["+','.join(str(x) for x in kwargs.get(key))+"])",
+              {"mobject": mobject}) for key in keys if key in kwargs]
+        self.wait(pre_time)
+        self.play(ShowSubmobjectsOneByOne(mobject))
         self.wait(post_time)
         return self
 

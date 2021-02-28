@@ -46,7 +46,8 @@ class Mobject(Container):
         self.updaters = []
         self.updating_suspended = False
         self.reset_points()
-        self.generate_points()
+        #self.generate_points()
+        self.generate_material()
         self.init_colors()
 
     def __str__(self):
@@ -62,6 +63,9 @@ class Mobject(Container):
     def generate_points(self):
         # Typically implemented in subclass, unless purposefully left blank
         pass
+
+    def generate_material(self):
+        self.generate_points()
 
     def add(self, *mobjects):
         if self in mobjects:
@@ -82,6 +86,25 @@ class Mobject(Container):
 
     def add_as_foreground(self, scene):
         scene.add_foreground_mobject(self)
+        return self
+
+    def add_to_group(self, *gps):
+        for gp in gps:
+            gp.add(self)
+        return self
+
+    def remove_from_group(self, *gps, t=0):
+        if isinstance(self,(list,tuple)):
+            for mob in self:
+                for gp in gps:
+                    if t!=0:
+                        gp.wait(t)
+                    gp.remove(mob)
+        else:
+            for gp in gps:
+                if t!=0:
+                    gp.wait(t)
+                gp.remove(self)
         return self
 
     def get_array_attrs(self):
@@ -414,7 +437,9 @@ class Mobject(Container):
                 submobject_to_align=None,
                 index_of_submobject_to_align=None,
                 coor_mask=np.array([1, 1, 1]),
+                gap=True,
                 ):
+        buff=buff if self.get_width()>0.01 and self.get_height()>0.01 and gap else 0#
         if isinstance(mobject_or_point, Mobject):
             mob = mobject_or_point
             if index_of_submobject_to_align is not None:
@@ -476,6 +501,21 @@ class Mobject(Container):
             self.scale(length / old_length, **kwargs)
         return self
 
+    def stretch_to_fit(self, length, dim, stretch=True, **kwargs):  
+        args=[length,dim]
+        for i,each in enumerate(args):
+            if isinstance(each,(int,float)):
+                args[i]=[args[i]]
+        args=list(zip(*args))
+        for i in range(len(args)):
+            old_length = self.length_over_dim(args[i][1])
+            if old_length != 0:
+                if stretch:
+                    self.stretch(args[i][0] / old_length, args[i][1], **kwargs)
+                else:
+                    self.scale(args[i][0] / old_length, **kwargs)
+        return self
+         
     def stretch_to_fit_width(self, width, **kwargs):
         return self.rescale_to_fit(width, 0, stretch=True, **kwargs)
 
