@@ -2,6 +2,8 @@
 
 \usepackage[landscape,a3paper]{geometry}
 
+\newcommand\titleA[1]{\textit{\textbf{\underline{#1}}}}
+\newcommand\bR[1]{\vspace{0.1em\enspace #1}}
 \def\theLetterSpace{-1pt}
 \def\extraWordSpace{-1pt}
 \newcommand\spaceout[2][\theLetterSpace]{%
@@ -36,6 +38,10 @@
 \DisableLigatures{encoding = *, family = * }
 %\usepackage[UTF8]{ctex}
 \linespread{1}
+\tolerance=1
+\emergencystretch=\maxdimen
+\hyphenpenalty=10000
+\hbadness=10000
 
 \begin{document}
 
