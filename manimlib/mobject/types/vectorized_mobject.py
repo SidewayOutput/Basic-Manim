@@ -7,6 +7,7 @@ from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.three_d_utils import get_3d_vmob_gradient_start_and_end_points
 from manimlib.utils.bezier import bezier
+from manimlib.utils.bezier import get_smooth_quadratic_bezier_handle_points
 from manimlib.utils.bezier import get_smooth_handle_points
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.bezier import integer_interpolate
@@ -59,6 +60,7 @@ class VMobject(Mobject):
         # varying zoom levels?
         "tolerance_for_point_equality": 1e-6,
         "n_points_per_cubic_curve": 4,
+        "n_points_per_curve": 3,
     }
 
     def get_group_class(self):
@@ -404,8 +406,8 @@ class VMobject(Mobject):
 
     def get_counting_points(self):
         points = self.get_anchors()
-        if self.is_closed()!=True:
-            points=[*points,*self.points[-1:-3:-1]]
+        if self.is_closed() != True:
+            points = [*points, *self.points[-1:-3:-1]]
         return points[::2]
 
     def set_anchors_and_handles(self, anchors1, handles1, handles2, anchors2):
@@ -521,12 +523,15 @@ class VMobject(Mobject):
         return self
 
     def change_anchor_mode(self, mode):
-        assert(mode in ["jagged", "smooth"])
+        assert(mode in ["jagged", "approx_smooth", "true_smooth", "smooth"])
         nppcc = self.n_points_per_cubic_curve
+        nppc = self.n_points_per_curve
         for submob in self.family_members_with_points():
             subpaths = submob.get_subpaths()
             submob.clear_points()
             for subpath in subpaths:
+                anchors = np.vstack([subpath[::nppc], subpath[-1:]])
+                '''
                 anchors = np.append(
                     subpath[::nppcc],
                     subpath[-1:],
@@ -542,11 +547,33 @@ class VMobject(Mobject):
                 new_subpath = np.array(subpath)
                 new_subpath[1::nppcc] = h1
                 new_subpath[2::nppcc] = h2
+                '''
+                new_subpath = np.array(subpath)
+                if mode == "approx_smooth":
+                    new_subpath[1::nppc] = get_smooth_quadratic_bezier_handle_points(
+                        anchors)
+                elif mode == "true_smooth":
+                    h1, h2 = get_smooth_cubic_bezier_handle_points(anchors)
+                    new_subpath = get_quadratic_approximation_of_cubic(
+                        anchors[:-1], h1, h2, anchors[1:])
+                elif mode == "jagged":
+                    new_subpath[1::nppc] = 0.5 * (anchors[:-1] + anchors[1:])
                 submob.append_points(new_subpath)
         return self
 
     def make_smooth(self):
         return self.change_anchor_mode("smooth")
+
+    def make_approximately_smooth(self):
+        """
+        Unlike make_smooth, this will not change the number of
+        points, but it also does not result in a perfectly smooth
+        curve.  It's most useful when the points have been
+        sampled at a not-too-low rate from a continuous function,
+        as in the case of ParametricCurve
+        """
+        self.change_anchor_mode("approx_smooth")
+        return self
 
     def make_jagged(self):
         return self.change_anchor_mode("jagged")

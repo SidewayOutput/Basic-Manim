@@ -48,6 +48,7 @@ class Mobject(Container):
         self.reset_points()
         #self.generate_points()
         self.generate_material()
+        self.init_points()
         self.init_colors()
 
     def __str__(self):
@@ -60,6 +61,10 @@ class Mobject(Container):
         # For subclasses
         pass
 
+    def init_points(self):
+        # Typically implemented in subclass, unlpess purposefully left blank
+        pass
+    
     def generate_points(self):
         # Typically implemented in subclass, unless purposefully left blank
         pass
@@ -90,7 +95,7 @@ class Mobject(Container):
 
     def add_to_group(self, *gps):
         for gp in gps:
-            gp.add(self)
+            gp.add(self).update()
         return self
 
     def remove_from_group(self, *gps, t=0):
@@ -259,6 +264,14 @@ class Mobject(Container):
 
     def shift(self, *vectors):
         total_vector = reduce(op.add, vectors)
+        for mob in self.family_members_with_points():
+            mob.points = mob.points.astype('float')
+            mob.points += total_vector
+        return self
+    def align(self, mobjects,align_on_edge=RU):
+        #if align_on_edge.all==0:
+
+        total_vector = mobjects.get_critical_point(align_on_edge)-self.get_critical_point(align_on_edge)
         for mob in self.family_members_with_points():
             mob.points = mob.points.astype('float')
             mob.points += total_vector
