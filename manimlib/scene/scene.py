@@ -7,7 +7,7 @@ from tqdm import tqdm as ProgressDisplay
 import numpy as np
 
 from manimlib.animation.animation import Animation
-from manimlib.animation.creation import Write, ShowSubmobjectsOneByOne
+from manimlib.animation.creation import ShowCreation, ShowSubmobjectsOneByOne, Write
 from manimlib.animation.fading import FadeIn, FadeOut
 from manimlib.animation.growing import GrowFromCenter, DiminishToCenter
 from manimlib.animation.transform import MoveToTarget, ApplyMethod
@@ -322,6 +322,19 @@ class Scene(Container):
         self.play(DiminishToCenter(mobject))
         self.wait(post_time)
         return self
+
+    def create(self, *mobject_or_chars, pre_time=0.5, post_time=1, **kwargs):
+        if not isinstance(mobject_or_chars, (list, tuple, np.ndarray)):
+            mobject_or_chars = [mobject_or_chars]
+        mobject = Group(*[MobjectOrChars(each) for each in mobject_or_chars])
+        keys = ["shift"]
+        [exec("mobject."+key+"(["+','.join(str(x) for x in kwargs.get(key))+"])",
+              {"mobject": mobject}) for key in keys if key in kwargs]
+        self.wait(pre_time)
+        self.play(ShowCreation(mobject),**kwargs)
+        self.wait(post_time)
+        return self
+
 
     def onebyone(self, *mobject_or_chars, run_time=1, pre_time=0.5, post_time=1, **kwargs):
         if not isinstance(mobject_or_chars, (list, tuple, np.ndarray)):
