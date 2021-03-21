@@ -10,13 +10,15 @@ class SceneFromVideo(Scene):
                   freeze_last_frame=True,
                   time_range=None):
         cap = cv2.VideoCapture(file_name)
+        self.frames=[]
         self.shape = (
-            int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)),
-            int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
-        )
-        fps = cap.get(cv2.cv.CV_CAP_PROP_FPS)
+            int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)),
+            int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        )   ##cv.CV_CAP_PROP_FRAME_WIDTH
+        fps = cap.get(cv2.CAP_PROP_FPS)
         self.camera.frame_rate = fps
-        frame_count = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+        frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        print(frame_count)
         if time_range is None:
             start_frame = 0
             end_frame = frame_count

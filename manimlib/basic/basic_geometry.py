@@ -1,8 +1,8 @@
 import numpy as np
-from manimlib.basic.basic_function import to_get_offset_lists, to_get_offsets, to_get_point
+from manimlib.basic.basic_function import to_get_offset_lists, to_get_offsets
 from manimlib.constants import BLUE, DEGREES, DL, DR, LEFT,  ORIGIN, OUT, RIGHT, UL, UR, WHITE
 from manimlib.mobject.geometry import Line, Polygon
-from manimlib.mobject.mobject import Mobject
+from manimlib.mobject.mobject import Mobject, Location
 from manimlib.mobject.types.vectorized_mobject import VGroup, VMobject
 from manimlib.utils.config_ops import digest_config, generate_args, generate_args_kwargs, merge_config_kwargs
 from manimlib.utils.space_ops import compass_directions, rotate_vector
@@ -47,16 +47,21 @@ class GeomPoint(VGroup):
                                      )
 
         return [self.add(GeomLine(
-            *list(zip(
-                *to_get_offset_lists(self.mobject_or_point,
-                                     [self.from_offset, self.to_offset])))[i],
+            *list(zip(*to_get_offset_lists(
+                self.mobject_or_point,
+                [self.from_offset, self.to_offset])))[i],
             **kwargs))
-            for i in range(len(to_get_point(self.mobject_or_point)))]
+            for i in range(len(Location(self.mobject_or_point)))]
+
+
+class GeomPosition(GeomPoint):
+    def __init__(self, mobject_or_point, **kwargs):
+        GeomPoint.__init__(self, mobject_or_point, 1e-8, 1e-8, **kwargs)
 
 
 class GeomLine(Line):
     '''
-    length,     [point]
+    xx length,     [point]
     [point],    [point] -->default
     [point],    (displacement)
     [point],    slope,              length
@@ -78,7 +83,11 @@ class GeomLine(Line):
             try:
                 isinstance(args[0], (list))
             except:
-                raise Exception("args[0]!=point")
+                try:
+                    isinstance(args[0], (int, float))
+                except:
+                    raise Exception("Not Supported")
+
             else:
                 try:
                     isinstance(args[1], (list, tuple))
@@ -123,6 +132,20 @@ class GeomLine(Line):
         Line.__init__(self, self.start, self.end, **kwargs)
 
 
+class GeomPolyline(Polygon):
+    CONFIG = {
+        "color": WHITE,
+        "mark_paths_closed": False,
+        "close_new_points": False,
+    }
+
+    def __init__(self, *vertices, **kwargs):
+        VMobject.__init__(self, **kwargs)
+        self.set_points_as_corners(
+            [*vertices]
+        )
+
+
 class GeomPolygon(Polygon):
     CONFIG = {
         "color": BLUE,
@@ -136,7 +159,7 @@ class GeomPolygon(Polygon):
             [*vertices, vertices[0]]
         )
         if self.mobject_or_point != None:
-            self.move_to(to_get_point(self.mobject_or_point))
+            self.move_to(Location(self.mobject_or_point))
 
 
 class GeomRegularPolygon(GeomPolygon):
@@ -156,7 +179,7 @@ class GeomRegularPolygon(GeomPolygon):
             generate_args(self, args, self.args)
         kwargs = merge_config_kwargs(self, kwargs, self.args_name)
 
-        self.mobject_or_point = to_get_point(self.mobject_or_point)
+        self.mobject_or_point = Location(self.mobject_or_point)
         if self.element == "point":
             if self.start_angle is None:
                 if n % 2 == 0:
@@ -188,7 +211,7 @@ class GeomRectangle(GeomPolygon):
         [self.height, self.width, self.mobject_or_point, self.start_angle, self.element, self.normal_vector] = \
             generate_args(self, args, self.args)
         kwargs = merge_config_kwargs(self, kwargs, self.args_name)
-        self.mobject_or_point = to_get_point(self.mobject_or_point)
+        self.mobject_or_point = Location(self.mobject_or_point)
         ul, ur, dr, dl = np.add(np.multiply(
             (UL, UR, DR, DL), [self.width/2, self.height/2, 0]), self.mobject_or_point)
         GeomPolygon.__init__(self, ul, ur, dr, dl, **kwargs)
@@ -216,6 +239,7 @@ class GeomSquare(GeomRectangle):
             *args[1:],
             **kwargs
         )
+
 
 class GeomArrow(GeomLine):
     CONFIG = {

@@ -1,13 +1,11 @@
 from copy import deepcopy
-
 import numpy as np
 
-from manimlib.container.container import Container
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.iterables import list_update
 from manimlib.utils.rate_functions import smooth
-
+from manimlib.mobject.mobject import _AnimationBuilder
 
 DEFAULT_ANIMATION_RUN_TIME = 1.0
 DEFAULT_ANIMATION_LAG_RATIO = 0
@@ -161,19 +159,25 @@ class Animation(object):
     def is_remover(self):
         return self.remover
 
+def prepare_animation(anim):
+    if isinstance(anim, _AnimationBuilder):
+        return anim.build()
+
+    if isinstance(anim, Animation):
+        return anim
+
+    raise TypeError(f"Object {anim} cannot be converted to an animation")
+
+
 
 class AGroup(Animation):
-    CONFIG = {
-        "name": None,
-    }
-
     def __init__(self, *animations, **kwargs):
-        Container.__init__(self, **kwargs)
-        self.subanimations = []
-        if self.name is None:
-            self.name = self.__class__.__name__
         if not all([isinstance(m, (Animation)) for m in animations]):
             raise Exception("All subanimations must be of type Animation")
+        digest_config(self, kwargs)
+        if self.name is None:
+            self.name = self.__class__.__name__
+        self.subanimations = []
         self.add(*animations)
 
     def __str__(self):

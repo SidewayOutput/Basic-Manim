@@ -101,6 +101,7 @@ from manimlib.basic.basic_animation import *
 from manimlib.basic.basic_complex import *
 from manimlib.basic.basic_compound import *
 from manimlib.basic.basic_function import *
+from manimlib.basic.basic_geometry import *
 from manimlib.basic.basic_mobject import *
 
 # Non manim libraries that are also nice to have without thinking

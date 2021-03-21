@@ -19,8 +19,9 @@ class CameraFrame(VGroup):
     def __init__(self, **kwargs):
         pass
 
-
 class MovingCamera(Camera):
+    pass
+class zMovingCamera(Camera):
     """
     Stays in line with the height, width and position of it's 'frame', which is a Rectangle
     """
@@ -37,6 +38,7 @@ class MovingCamera(Camera):
         determining which region of space the camera displys
         """
         digest_config(self, kwargs)
+        '''
         if frame is None:
             frame = ScreenRectangle(height=FRAME_HEIGHT)
             frame.set_stroke(
@@ -44,6 +46,7 @@ class MovingCamera(Camera):
                 self.default_frame_stroke_width,
             )
         self.frame = frame
+        '''
         Camera.__init__(self, **kwargs)
 
     # TODO, make these work for a rotated frame

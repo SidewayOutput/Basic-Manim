@@ -31,9 +31,10 @@ class Mobject(Container):
     Mathematical Object
     """
     CONFIG = {
-        "color": WHITE,
         "name": None,
-        "dim": 3,
+        "color": WHITE,
+        "opacity": 1,
+        "dim": XYZ,  # TODO, get rid of this
         "target": None,
     }
 
@@ -46,7 +47,7 @@ class Mobject(Container):
         self.updaters = []
         self.updating_suspended = False
         self.reset_points()
-        #self.generate_points()
+        # self.generate_points()
         self.generate_material()
         self.init_points()
         self.init_colors()
@@ -54,8 +55,16 @@ class Mobject(Container):
     def __str__(self):
         return str(self.name)
 
+
+    def init_data(self):
+        self.data = {
+            "points": np.zeros((0, XYZ)),
+            "bounding_box": np.zeros((3, XYZ)),
+            "rgbas": np.zeros((1, 4)),
+        }
+
     def reset_points(self):
-        self.points = np.zeros((0, self.dim))
+        self.points = np.zeros((0, XYZ))
 
     def init_colors(self):
         # For subclasses
@@ -64,14 +73,25 @@ class Mobject(Container):
     def init_points(self):
         # Typically implemented in subclass, unlpess purposefully left blank
         pass
-    
+
     def generate_points(self):
         # Typically implemented in subclass, unless purposefully left blank
         pass
 
     def generate_material(self):
         self.generate_points()
-
+        self.init_data()
+    '''
+    def set_points(self, points):
+        if len(points) == len(self.data["points"]):
+            self.data["points"][:] = points
+        elif isinstance(points, np.ndarray):
+            self.data["points"] = points.copy()
+        else:
+            self.data["points"] = np.array(points)
+        self.refresh_bounding_box()
+        return self
+    '''
     def add(self, *mobjects):
         if self in mobjects:
             raise Exception("Mobject cannot contain self")
@@ -99,15 +119,15 @@ class Mobject(Container):
         return self
 
     def remove_from_group(self, *gps, t=0):
-        if isinstance(self,(list,tuple)):
+        if isinstance(self, (list, tuple)):
             for mob in self:
                 for gp in gps:
-                    if t!=0:
+                    if t != 0:
                         gp.wait(t)
                     gp.remove(mob)
         else:
             for gp in gps:
-                if t!=0:
+                if t != 0:
                     gp.wait(t)
                 gp.remove(self)
         return self
@@ -268,10 +288,12 @@ class Mobject(Container):
             mob.points = mob.points.astype('float')
             mob.points += total_vector
         return self
-    def align(self, mobjects,align_on_edge=RU):
-        #if align_on_edge.all==0:
 
-        total_vector = mobjects.get_critical_point(align_on_edge)-self.get_critical_point(align_on_edge)
+    def align(self, mobjects, align_on_edge=RU):
+        # if align_on_edge.all==0:
+
+        total_vector = mobjects.get_critical_point(
+            align_on_edge)-self.get_critical_point(align_on_edge)
         for mob in self.family_members_with_points():
             mob.points = mob.points.astype('float')
             mob.points += total_vector
@@ -336,7 +358,7 @@ class Mobject(Container):
         # Default to applying matrix about the origin, not mobjects center
         if ("about_point" not in kwargs) and ("about_edge" not in kwargs):
             kwargs["about_point"] = ORIGIN
-        full_matrix = np.identity(self.dim)
+        full_matrix = np.identity(XYZ)
         matrix = np.array(matrix)
         full_matrix[:matrix.shape[0], :matrix.shape[1]] = matrix
         self.apply_points_function_about_point(
@@ -452,7 +474,7 @@ class Mobject(Container):
                 coor_mask=np.array([1, 1, 1]),
                 gap=True,
                 ):
-        buff=buff if self.get_width()>0.01 and self.get_height()>0.01 and gap else 0#
+        buff = buff if self.get_width() > 0.01 and self.get_height() > 0.01 and gap else 0
         if isinstance(mobject_or_point, Mobject):
             mob = mobject_or_point
             if index_of_submobject_to_align is not None:
@@ -514,12 +536,12 @@ class Mobject(Container):
             self.scale(length / old_length, **kwargs)
         return self
 
-    def stretch_to_fit(self, length, dim, stretch=True, **kwargs):  
-        args=[length,dim]
-        for i,each in enumerate(args):
-            if isinstance(each,(int,float)):
-                args[i]=[args[i]]
-        args=list(zip(*args))
+    def stretch_to_fit(self, length, dim, stretch=True, **kwargs):
+        args = [length, dim]
+        for i, each in enumerate(args):
+            if isinstance(each, (int, float)):
+                args[i] = [args[i]]
+        args = list(zip(*args))
         for i in range(len(args)):
             old_length = self.length_over_dim(args[i][1])
             if old_length != 0:
@@ -528,7 +550,7 @@ class Mobject(Container):
                 else:
                     self.scale(args[i][0] / old_length, **kwargs)
         return self
-         
+
     def stretch_to_fit_width(self, width, **kwargs):
         return self.rescale_to_fit(width, 0, stretch=True, **kwargs)
 
@@ -549,7 +571,7 @@ class Mobject(Container):
 
     def set_coord(self, value, dim, direction=ORIGIN):
         curr = self.get_coord(dim, direction)
-        shift_vect = np.zeros(self.dim)
+        shift_vect = np.zeros(XYZ)
         shift_vect[dim] = value - curr
         self.shift(shift_vect)
         return self
@@ -826,11 +848,11 @@ class Mobject(Container):
         9 'critical points': 4 corners, 4 edge center, the
         center.  This returns one of them.
         """
-        result = np.zeros(self.dim)
+        result = np.zeros(XYZ)
         all_points = self.get_points_defining_boundary()
         if len(all_points) == 0:
             return result
-        for dim in range(self.dim):
+        for dim in range(XYZ):
             result[dim] = self.get_extremum_along_dim(
                 all_points, dim=dim, key=direction[dim]
             )
@@ -845,7 +867,7 @@ class Mobject(Container):
         return self.get_critical_point(direction)
 
     def get_center(self):
-        return self.get_critical_point(np.zeros(self.dim))
+        return self.get_critical_point(np.zeros(XYZ))
 
     def get_center_of_mass(self):
         return np.apply_along_axis(np.mean, 0, self.get_all_points())
@@ -992,7 +1014,7 @@ class Mobject(Container):
         else:
             point = mobject_or_point
 
-        for dim in range(self.dim):
+        for dim in range(XYZ):
             if direction[dim] != 0:
                 self.set_coord(point[dim], dim, direction)
         return self
@@ -1206,13 +1228,35 @@ class Mobject(Container):
             sm1.interpolate_color(sm1, sm2, 1)
         return self
 
+
     # Errors
+
     def throw_error_if_no_points(self):
         if self.has_no_points():
             message = "Cannot call Mobject.{} " +\
                       "for a Mobject with no points"
             caller_name = sys._getframe(1).f_code.co_name
             raise Exception(message.format(caller_name))
+    
+    def find_xyz(self, mobject_or_point, direction=None, default=[0, 0, 0]):
+        if isinstance(mobject_or_point, Mobject):
+            if direction == None:
+                mobject_or_point = mobject_or_point.get_center()
+            elif isinstance(direction, (int, float)):
+                mobject_or_point = mobject_or_point.point_from_proportion(
+                    direction)
+            elif isinstance(direction, list):
+                mobject_or_point = mobject_or_point.get_boundary_point(
+                    direction)
+            elif isinstance(direction, tuple) and len(direction) == 1:
+                mobject_or_point = mobject_or_point.get_points_defining_boundary()[
+                    direction[0]]
+        return mobject_or_point
+
+    @property
+    def animate(self):
+        # Borrowed from https://github.com/ManimCommunity/manim/
+        return _AnimationBuilder(self)
 
 
 class Group(Mobject):
@@ -1221,3 +1265,83 @@ class Group(Mobject):
             raise Exception("All submobjects must be of type Mobject")
         Mobject.__init__(self, **kwargs)
         self.add(*mobjects)
+
+
+class Point(Mobject):
+    CONFIG = {
+        "artificial_width": 1e-6,
+        "artificial_height": 1e-6,
+    }
+
+    def __init__(self, location=ORIGIN, **kwargs):
+        Mobject.__init__(self, **kwargs)
+        self.set_location(location)
+
+    def get_width(self):
+        return self.artificial_width
+
+    def get_height(self):
+        return self.artificial_height
+
+    def get_location(self):
+        return self.get_points()[0].copy()
+
+    def get_bounding_box_point(self, *args, **kwargs):
+        return self.get_location()
+
+    def set_location(self, new_loc):
+        self.set_points(np.array(new_loc, ndmin=2, dtype=float))
+
+
+class Location(Mobject):
+    def __new__(cls, mobject_or_point, direction=None, default=[0, 0, 0], **kwargs):
+        return super().__new__(cls).find_xyz(mobject_or_point, direction, default)
+
+
+class _AnimationBuilder:
+    def __init__(self, mobject):
+        self.mobject = mobject
+        self.overridden_animation = None
+        self.mobject.generate_target()
+        self.is_chaining = False
+        self.methods = []
+
+    def __getattr__(self, method_name):
+
+        method = getattr(self.mobject.target, method_name)
+        self.methods.append(method)
+        has_overridden_animation = hasattr(method, "_override_animate")
+
+        if (self.is_chaining and has_overridden_animation) or self.overridden_animation:
+            raise NotImplementedError(
+                "Method chaining is currently not supported for "
+                "overridden animations"
+            )
+
+        def update_target(*method_args, **method_kwargs):
+            if has_overridden_animation:
+                self.overridden_animation = method._override_animate(
+                    self.mobject, *method_args, **method_kwargs
+                )
+            else:
+                method(*method_args, **method_kwargs)
+            return self
+
+        self.is_chaining = True
+        return update_target
+
+    def build(self):
+        from manimlib.animation.transform import _MethodAnimation
+
+        if self.overridden_animation:
+            return self.overridden_animation
+
+        return _MethodAnimation(self.mobject, self.methods)
+
+
+def override_animate(method):
+    def decorator(animation_method):
+        method._override_animate = animation_method
+        return animation_method
+
+    return decorator

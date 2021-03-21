@@ -12,9 +12,12 @@ from manimlib.utils.color import get_shaded_rgb
 from manimlib.utils.simple_functions import clip_in_place
 from manimlib.utils.space_ops import rotation_about_z
 from manimlib.utils.space_ops import rotation_matrix
+from manimlib.camera.cam import Cam
+from manimlib.utils.config_ops import digest_config
+from manimlib.mobject.frame import ScreenRectangle
 
 
-class ThreeDCamera(Camera):
+class ThreeDCamera(Cam):
     CONFIG = {
         "shading_factor": 0.2,
         "distance": 20.0,
@@ -23,14 +26,27 @@ class ThreeDCamera(Camera):
         "theta": -90 * DEGREES,  # Rotation about z axis
         "gamma": 0,  # Rotation about normal vector to camera
         "light_source_start_point": 9 * DOWN + 7 * LEFT + 10 * OUT,
-        "frame_center": ORIGIN,
+        "frame_center": [0,0,0],#ORIGIN,
         "should_apply_shading": True,
         "exponential_projection": False,
         "max_allowable_norm": 3 * FRAME_WIDTH,
+        "frame":None,
+        "fixed_dimension": 0,  # width
+        "default_frame_stroke_color": WHITE,
+        "default_frame_stroke_width": 0,
     }
 
     def __init__(self, *args, **kwargs):
-        Camera.__init__(self, *args, **kwargs)
+        digest_config(self, kwargs)
+        if self.frame is None:
+            frame = ScreenRectangle(height=FRAME_HEIGHT)
+            frame.set_stroke(
+                self.default_frame_stroke_color,
+                self.default_frame_stroke_width,
+            )
+        self.frame = frame
+        
+        Cam.__init__(self, *args, **kwargs)
         self.phi_tracker = ValueTracker(self.phi)
         self.theta_tracker = ValueTracker(self.theta)
         self.distance_tracker = ValueTracker(self.distance)
@@ -43,7 +59,7 @@ class ThreeDCamera(Camera):
 
     def capture_mobjects(self, mobjects, **kwargs):
         self.reset_rotation_matrix()
-        Camera.capture_mobjects(self, mobjects, **kwargs)
+        Cam.capture_mobjects(self, mobjects, **kwargs)
 
     def get_value_trackers(self):
         return [
@@ -88,7 +104,7 @@ class ThreeDCamera(Camera):
         )
 
     def get_mobjects_to_display(self, *args, **kwargs):
-        mobjects = Camera.get_mobjects_to_display(
+        mobjects = Cam.get_mobjects_to_display(
             self, *args, **kwargs
         )
         rot_matrix = self.get_rotation_matrix()
@@ -230,3 +246,11 @@ class ThreeDCamera(Camera):
         for mobject in self.extract_mobject_family_members(mobjects):
             if mobject in self.fixed_in_frame_mobjects:
                 self.fixed_in_frame_mobjects.remove(mobject)
+
+
+    def get_mobjects_indicating_movement(self):
+        """
+        Returns all mobjets whose movement implies that the camera
+        should think of all other mobjects on the screen as moving
+        """
+        return [self.frame]
