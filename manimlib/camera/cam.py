@@ -9,7 +9,7 @@ from scipy.spatial.distance import pdist
 import cairo
 import numpy as np
 
-from manimlib.constants import *
+from manimlib.constants import DEFAULT_PIXEL_HEIGHT,DEFAULT_PIXEL_WIDTH,DEFAULT_FRAME_RATE,FRAME_HEIGHT,FRAME_WIDTH,ORIGIN,BLACK,TAU,PRODUCTION_QUALITY_CAMERA_CONFIG
 from manimlib.mobject.types.image_mobject import AbstractImageMobject
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.types.point_cloud_mobject import PMobject
@@ -25,81 +25,7 @@ from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import get_norm
 from manimlib.mobject.frame import ScreenRectangle
 
-'''
-class CameraFrame(Mobject):
-    CONFIG = {
-        "fixed_dimension": 0,  # width
-        "default_frame_stroke_color": WHITE,
-        "default_frame_stroke_width": 0,
-    }
 
-    def __init__(self, frame=None, **kwargs):
-        """
-        frame is a Mobject, (should almost certainly be a rectangle)
-        determining which region of space the camera displys
-        """
-        digest_config(self, kwargs)
-        if frame is None:
-            frame = ScreenRectangle(height=FRAME_HEIGHT)
-            frame.set_stroke(
-                self.default_frame_stroke_color,
-                self.default_frame_stroke_width,
-            )
-        self.frame = frame
-        Camera.__init__(self, **kwargs)
-
-    # TODO, make these work for a rotated frame
-    def get_frame_height(self):
-        return self.frame.get_height()
-
-    def get_frame_width(self):
-        return self.frame.get_width()
-
-    def get_frame_center(self):
-        return self.frame.get_center()
-
-    def set_frame_height(self, frame_height):
-        self.frame.stretch_to_fit_height(frame_height)
-
-    def set_frame_width(self, frame_width):
-        self.frame.stretch_to_fit_width(frame_width)
-
-    def set_frame_center(self, frame_center):
-        self.frame.move_to(frame_center)
-
-    def capture_mobjects(self, mobjects, **kwargs):
-        # self.reset_frame_center()
-        # self.realign_frame_shape()
-        Camera.capture_mobjects(self, mobjects, **kwargs)
-
-    # Since the frame can be moving around, the cairo
-    # context used for updating should be regenerated
-    # at each frame.  So no caching.
-    def get_cached_cairo_context(self, pixel_array):
-        return None
-
-    def cache_cairo_context(self, pixel_array, ctx):
-        pass
-
-    # def reset_frame_center(self):
-    #     self.frame_center = self.frame.get_center()
-
-    # def realign_frame_shape(self):
-    #     height, width = self.frame_shape
-    #     if self.fixed_dimension == 0:
-    #         self.frame_shape = (height, self.frame.get_width())
-    #     else:
-    #         self.frame_shape = (self.frame.get_height(), width)
-    #     self.resize_frame_shape(fixed_dimension=self.fixed_dimension)
-
-    def get_mobjects_indicating_movement(self):
-        """
-        Returns all mobjets whose movement implies that the camera
-        should think of all other mobjects on the screen as moving
-        """
-        return [self.frame]
-
-'''
 class Cam(object):
     CONFIG = {
         "background_image": None,
@@ -127,14 +53,14 @@ class Cam(object):
 
     def __init__(self, background=None, **kwargs):
         digest_config(self, kwargs, locals())
-        
+        self.init_config()
         self.rgb_max_val = np.iinfo(self.pixel_array_dtype).max
         self.pixel_array_to_cairo_context = {}
         self.init_background()
         self.resize_frame_shape()
         self.reset()
-        self.xframe=Mobject()
-        self.cameramframe=self
+        self.xframe = Mobject()
+        self.cameramframe = self
 
     def __deepcopy__(self, memo):
         # This is to address a strange bug where deepcopying
@@ -143,6 +69,16 @@ class Cam(object):
         self.canvas = None
         return copy.copy(self)
 
+    def init_config(self):
+        self.background_image = vars(self)['background_image']
+        self.image_mode = vars(self)['image_mode']
+        self.pixel_array_dtype = vars(self)['pixel_array_dtype']
+        self.background_color = vars(self)['background_color']
+        self.background_opacity = vars(self)['background_opacity']
+        self.n_channels = vars(self)['n_channels']
+        self.pixel_array = vars(self)['pixel_array']
+        self.cairo_line_width_multiple = vars(self)['cairo_line_width_multiple']
+        self.max_allowable_norm = vars(self)['max_allowable_norm']
     def reset_pixel_shape(self, new_height, new_width):
         self.pixel_width = new_width
         self.pixel_height = new_height
@@ -305,7 +241,7 @@ class Cam(object):
                     excluded_mobjects
                 )
                 mobjects = list_difference_update(mobjects, all_excluded)
-        
+
         return mobjects
 
     def is_in_frame(self, mobject):
@@ -324,7 +260,7 @@ class Cam(object):
 
     def capture_mobjects(self, mobjects, **kwargs):
         mobjects = self.get_mobjects_to_display(mobjects, **kwargs)
-        
+
         # Organize this list into batches of the same type, and
         # apply corresponding function to those batches
         type_func_pairs = [
@@ -335,7 +271,8 @@ class Cam(object):
         ]
 
         def get_mobject_type(mobject):
-            for mobject_type, func in type_func_pairs:
+            #for mobject_type, func in type_func_pairs:
+            for mobject_type in [type_func_pair[0] for type_func_pair in type_func_pairs]:
                 if isinstance(mobject, mobject_type):
                     return mobject_type
             raise Exception(
@@ -428,7 +365,8 @@ class Cam(object):
             ctx.new_sub_path()
             start = subpath[0]
             ctx.move_to(*start[:2])
-            for p0, p1, p2, p3 in quads:
+            #for p0, p1, p2, p3 in quads:
+            for p1, p2, p3 in [quad[1:] for quad in quads]:
                 ctx.curve_to(*p1[:2], *p2[:2], *p3[:2])
             if vmobject.consider_points_equals(subpath[0], subpath[-1]):
                 ctx.close_path()
@@ -730,7 +668,6 @@ class Cam(object):
         centered_space_coords = centered_space_coords * (1, -1)
 
         return centered_space_coords
-
 
 
 class BackgroundColoredVMobjectDisplayer(object):

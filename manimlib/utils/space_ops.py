@@ -1,7 +1,7 @@
 from functools import reduce
 
 import numpy as np
-
+import math
 from manimlib.constants import OUT
 from manimlib.constants import PI
 from manimlib.constants import RIGHT
@@ -18,7 +18,21 @@ def get_norm(vect):
 # TODO, implement quaternion type
 
 
-def quaternion_mult(q1, q2):
+def quaternion_mult(*quats):
+    if len(quats) == 0:
+        return [1, 0, 0, 0]
+    result = quats[0]
+    for next_quat in quats[1:]:
+        w1, x1, y1, z1 = result
+        w2, x2, y2, z2 = next_quat
+        result = [
+            w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2,
+            w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2,
+            w1 * y2 + y1 * w2 + z1 * x2 - x1 * z2,
+            w1 * z2 + z1 * w2 + x1 * y2 - y1 * x2,
+        ]
+    return result
+def zquaternion_mult(q1, q2):
     w1, x1, y1, z1 = q1
     w2, x2, y2, z2 = q2
     return np.array([
@@ -29,7 +43,11 @@ def quaternion_mult(q1, q2):
     ])
 
 
-def quaternion_from_angle_axis(angle, axis):
+def quaternion_from_angle_axis(angle, axis, axis_normalized=False):
+    if not axis_normalized:
+        axis = normalize(axis)
+    return [math.cos(angle / 2), *(math.sin(angle / 2) * axis)]
+def zquaternion_from_angle_axis(angle, axis):
     return np.append(
         np.cos(angle / 2),
         np.sin(angle / 2) * normalize(axis)
@@ -76,7 +94,31 @@ def thick_diagonal(dim, thickness=2):
     col_indices = np.transpose(row_indices)
     return (np.abs(row_indices - col_indices) < thickness).astype('uint8')
 
+def rotation_matrix_transpose_from_quaternion(quat):
+    quat_inv = quaternion_conjugate(quat)
+    return [
+        quaternion_mult(quat, [0, *basis], quat_inv)[1:]
+        for basis in [
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 1],
+        ]
+    ]
 
+def rotation_matrix_transpose(angle, axis):
+    if axis[0] == 0 and axis[1] == 0:
+        # axis = [0, 0, z] case is common enough it's worth
+        # having a shortcut
+        sgn = 1 if axis[2] > 0 else -1
+        cos_a = math.cos(angle)
+        sin_a = math.sin(angle) * sgn
+        return [
+            [cos_a, sin_a, 0],
+            [-sin_a, cos_a, 0],
+            [0, 0, 1],
+        ]
+    quat = quaternion_from_angle_axis(angle, axis)
+    return rotation_matrix_transpose_from_quaternion(quat)
 def rotation_matrix(angle, axis):
     """
     Rotation in R^3 about a specified axis of rotation.
