@@ -42,7 +42,8 @@ The aim of project "Basic-Manim" is to test and update basic manim features base
 
 In general,
 
-All files in the directory `manim-19Dec19-3b1b-archive` are copyright 3Blue1Brown.
+All files in the directory `manim-19Dec19-3b1b-archive` are [copyright 3Blue1Brown](https://github.com/SidewayOutput/Basic-Manim/blob/main/manim-19Dec19-3b1b-archive/LICENSE).
+All files in the directory `manim-01Mar21-3b1b-archive` are [copyright 3Blue1Brown](https://github.com/SidewayOutput/Basic-Manim/blob/main/manim-01Mar21-3b1b-archive/LICENSE.md).
 
 The general purpose animation code found in the remainder of the repository, on the other hand, 
 is under the MIT license.
