@@ -1,8 +1,10 @@
 import argparse
 import colour
+import inspect
 import importlib.util
 import os
 import sys
+import yaml
 import types
 
 import manimlib.constants
@@ -163,6 +165,12 @@ def parse_cli():
         sys.exit(2)
 
 
+def get_manim_dir():
+    manimlib_module = importlib.import_module("manimlib")
+    manimlib_dir = os.path.dirname(inspect.getabsfile(manimlib_module))
+    return os.path.abspath(os.path.join(manimlib_dir, ".."))
+
+
 def get_module(file_name):
     if file_name == "-":
         module = types.ModuleType("input_scenes")
@@ -179,6 +187,29 @@ def get_module(file_name):
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         return module
+
+
+def get_custom_config():
+    filename = "custom_config.yml"
+    global_defaults_file = os.path.join(get_manim_dir(), "manimlib", "default_config.yml")
+
+    if os.path.exists(global_defaults_file):
+        with open(global_defaults_file, "r") as file:
+            config = yaml.safe_load(file)
+
+        if os.path.exists(filename):
+            with open(filename, "r") as file:
+                local_defaults = yaml.safe_load(file)
+            if local_defaults:
+                config = merge_dicts_recursively(
+                    config,
+                    local_defaults,
+                )
+    else:
+        with open(filename, "r") as file:
+            config = yaml.safe_load(file)
+    
+    return config
 
 
 def get_configuration(args):

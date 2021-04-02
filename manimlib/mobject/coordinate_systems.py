@@ -8,7 +8,7 @@ from manimlib.mobject.geometry import Line
 from manimlib.mobject.geometry import DashedLine
 from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.number_line import NumberLine
-from manimlib.mobject.svg.tex_mobject import TexMobject
+from manimlib.mobject.svg.tex_mobject import Tex,TexMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.config_ops import merge_dicts_recursively

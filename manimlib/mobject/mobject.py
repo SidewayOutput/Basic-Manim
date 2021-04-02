@@ -5,6 +5,7 @@ import operator as op
 import os
 import random
 import sys
+from functools import wraps
 
 from colour import Color
 import numpy as np
@@ -36,6 +37,13 @@ class Mobject(Container):
         "opacity": 1,
         "dim": XYZ,  # TODO, get rid of this
         "target": None,
+        # Lighting parameters
+        # Positive gloss up to 1 makes it reflect the light.
+        "gloss": 0.0,
+        # Positive shadow up to 1 makes a side opposite the light darker
+        "shadow": 0.0,
+        # If true, the mobject will not get rotated according to camera position
+        "is_fixed_in_frame": False,
     }
 
     def __init__(self, **kwargs):
@@ -49,6 +57,7 @@ class Mobject(Container):
         self.reset_points()
         # self.generate_points()
         self.generate_material()
+        self.init_uniforms()
         self.init_points()
         self.init_colors()
 
@@ -65,6 +74,13 @@ class Mobject(Container):
 
     def reset_points(self):
         self.points = np.zeros((0, XYZ))
+
+    def init_uniforms(self):
+        self.uniforms = {
+            "is_fixed_in_frame": float(self.is_fixed_in_frame),
+            "gloss": self.gloss,
+            "shadow": self.shadow,
+        }
 
     def init_colors(self):
         # For subclasses
@@ -135,6 +151,11 @@ class Mobject(Container):
     def get_array_attrs(self):
         return ["points"]
 
+    def set_submobjects(self, submobject_list):
+        self.remove(*self.submobjects)
+        self.add(*submobject_list)
+        return self
+
     def digest_mobject_attrs(self):
         """
         Ensures all attributes which are mobjects are included
@@ -149,6 +170,21 @@ class Mobject(Container):
         for attr in self.get_array_attrs():
             setattr(self, attr, func(getattr(self, attr)))
         return self
+
+    def get_grid(self, n_rows, n_cols, height=None, **kwargs):
+        """
+        Returns a new mobject containing multiple copies of this one
+        arranged in a grid
+        """
+        grid = self.get_group_class()(
+            *(self.copy() for n in range(n_rows * n_cols))
+        )
+        grid.arrange_in_grid(n_rows, n_cols, **kwargs)
+        if height is not None:
+            grid.set_height(height)
+        return grid
+
+
 
     # Displaying
 
@@ -474,7 +510,7 @@ class Mobject(Container):
                 coor_mask=np.array([1, 1, 1]),
                 gap=True,
                 ):
-        buff = buff if self.get_width() > 0.01 and self.get_height() > 0.01 and gap else 0
+        #buff = buff if self.get_width() > 0.01 and self.get_height() > 0.01 and gap else 0
         if isinstance(mobject_or_point, Mobject):
             mob = mobject_or_point
             if index_of_submobject_to_align is not None:
@@ -494,7 +530,7 @@ class Mobject(Container):
             aligner = self
         point_to_align = aligner.get_critical_point(aligned_edge - direction)
         self.shift((target_point - point_to_align +
-                    buff * direction) * coor_mask)
+                    buff * np.array(direction)) * coor_mask)
         return self
 
     def shift_onto_screen(self, **kwargs):
@@ -1123,6 +1159,19 @@ class Mobject(Container):
             mobject.align_points_with_larger(self)
         return self
 
+    def align_family(self, mobject):
+        mob1 = self
+        mob2 = mobject
+        n1 = len(mob1)
+        n2 = len(mob2)
+        if n1 != n2:
+            mob1.add_n_more_submobjects(max(0, n2 - n1))
+            mob2.add_n_more_submobjects(max(0, n1 - n2))
+        # Recurse
+        for sm1, sm2 in zip(mob1.submobjects, mob2.submobjects):
+            sm1.align_family(sm2)
+        return self
+
     def align_points_with_larger(self, larger_mobject):
         raise Exception("Not implemented")
 
@@ -1226,6 +1275,24 @@ class Mobject(Container):
         for sm1, sm2 in zip(self.get_family(), mobject.get_family()):
             sm1.points = np.array(sm2.points)
             sm1.interpolate_color(sm1, sm2, 1)
+        return self
+
+    def affects_shader_info_id(func):
+        @wraps(func)
+        def wrapper(self):
+            for mob in self.get_family():
+                func(mob)
+                mob.refresh_shader_wrapper_id()
+            return self
+        return wrapper
+
+    @affects_shader_info_id
+    def fix_in_frame(self):
+        self.uniforms["is_fixed_in_frame"] = 1.0
+        return self
+
+    def refresh_shader_wrapper_id(self):
+        self.shader_wrapper.refresh_id()
         return self
 
 

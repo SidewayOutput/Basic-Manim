@@ -7,7 +7,7 @@ import manimlib.constants as consts
 from manimlib.constants import *
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.utils.config_ops import digest_config
-
+TEXT_MOB_SCALE_FACTOR = 0.001048
 
 class TextSetting(object):
     def __init__(self, start, end, font, slant, weight, line_num=-1):
@@ -24,11 +24,14 @@ class Text(SVGMobject):
         # Mobject
         'color': consts.WHITE,
         'height': None,
+        "stroke_width": 0,
         # Text
         'font': '',
         'gradient': None,
         'lsh': -1,
         'size': 1,
+        "font_size": 48,
+        "tab_width": 4,
         'slant': NORMAL,
         'weight': NORMAL,
         't2c': {},
@@ -36,6 +39,7 @@ class Text(SVGMobject):
         't2g': {},
         't2s': {},
         't2w': {},
+        "disable_ligatures": True,
     }
 
     def __init__(self, text, **config):
@@ -55,7 +59,9 @@ class Text(SVGMobject):
             self.set_color_by_t2g()
 
         # anti-aliasing
-        self.scale(0.1)
+        if self.height is None:
+            self.scale(TEXT_MOB_SCALE_FACTOR * self.font_size)
+        #self.scale(0.1)
 
     def find_indexes(self, word):
         m = re.match(r'\[([0-9\-]{0,}):([0-9\-]{0,})\]', word)

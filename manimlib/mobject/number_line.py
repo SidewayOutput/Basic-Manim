@@ -192,13 +192,18 @@ class NumberLine(Line):
 
     def add_numbers(self, *numbers, excluding=None, font_size=24, x_values=None, **kwargs):
         if x_values is None:
-            if len(numbers) == 1 and isinstance(numbers[0], list):
-                x_values = (numbers[0])
-            elif len(numbers) > 0 and not isinstance(numbers[0], list):
-                x_values = list(numbers)
+            if numbers is not None:
+                if len(numbers) == 1 and isinstance(numbers[0], list):
+                    x_values = (numbers[0])
+                if len(numbers) == 1 and numbers[0] is None:
+                    x_values =  self.get_tick_range()
+                elif len(numbers) > 0 and not isinstance(numbers[0], list):
+                    x_values = list(numbers)
+                else:
+                    x_values =self.get_tick_range()
             else:
                 x_values = self.get_tick_range()
-
+        
         kwargs["font_size"] = font_size
 
         numbers = VGroup()
@@ -217,6 +222,7 @@ class NumberLine(Line):
         )
         self.add(self.numbers)
         return self
+        
         '''
 
     def init_leftmost_tick(self):
