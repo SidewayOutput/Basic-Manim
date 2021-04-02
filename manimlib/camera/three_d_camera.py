@@ -1,7 +1,7 @@
-from manimlib.camera.camera import Camera
+from manimlib.camera.multi_camera import MultiCamera
 
 
-class ThreeDCamera(Camera):
+class ThreeDCamera(MultiCamera):
     CONFIG = {
         "C3D": True,
     }

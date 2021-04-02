@@ -66,8 +66,9 @@ class Camera(Cam):
         """
         digest_config(self, kwargs)
         self.init_config()
+
         if self.frame is None:
-            self.frame = CameraFrame()
+            self.frame = CameraFrame(default_frame_stroke_width=self.default_frame_stroke_width)
         Cam.__init__(self, **kwargs)
         # Camer3D
         if self.C3D:
@@ -92,9 +93,9 @@ class Camera(Cam):
         self.should_apply_shading = vars(self)['should_apply_shading']
         self.exponential_projection = vars(self)['exponential_projection']
         self.gamma = vars(self)['gamma']
+
     # TODO, make these work for a rotated frame
     # <--2D
-
     def get_frame_height(self):
         if not self.C3D:
             return self.frame.get_height()
@@ -132,10 +133,7 @@ class Camera(Cam):
         else:
             # Cam.set_frame_center(self, frame_center)#point
             self.frame_center.move_to(frame_center)  # point
-
     # 2D-->
-
-
 
     # Since the frame can be moving around, the cairo
     # context used for updating should be regenerated
@@ -168,9 +166,8 @@ class Camera(Cam):
         should think of all other mobjects on the screen as moving
         """
         return [self.frame]
-    # '''
-    # Camer3D
 
+    # <--Camer3D
     def capture_mobjects(self, mobjects, **kwargs):
         if self.C3D:
             self.reset_rotation_matrix()
@@ -260,7 +257,6 @@ class Camera(Cam):
     def get_gamma(self):
         return self.gamma_tracker.get_value()
 
-
     def set_phi(self, value):
         self.phi_tracker.set_value(value)
 
@@ -272,7 +268,6 @@ class Camera(Cam):
 
     def set_gamma(self, value):
         self.gamma_tracker.set_value(value)
-
 
     def reset_rotation_matrix(self):
         self.rotation_matrix = self.generate_rotation_matrix()
@@ -375,5 +370,4 @@ class Camera(Cam):
         for mobject in self.extract_mobject_family_members(mobjects):
             if mobject in self.fixed_in_frame_mobjects:
                 self.fixed_in_frame_mobjects.remove(mobject)
-
-    # '''
+    #Camera3D-->

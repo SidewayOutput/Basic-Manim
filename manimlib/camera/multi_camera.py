@@ -1,23 +1,25 @@
-from manimlib.camera.moving_camera import MovingCamera
 from manimlib.utils.iterables import list_difference_update
+from manimlib.camera.camera import Camera
 
 
-class MultiCamera(MovingCamera):
+class MultiCamera(Camera):
     CONFIG = {
         "allow_cameras_to_capture_their_own_display": False,
     }
 
     def __init__(self, *image_mobjects_from_cameras, **kwargs):
+        self.allow_cameras_to_capture_their_own_display=MultiCamera.CONFIG['allow_cameras_to_capture_their_own_display']
         self.image_mobjects_from_cameras = []
         for imfc in image_mobjects_from_cameras:
             self.add_image_mobject_from_camera(imfc)
-        MovingCamera.__init__(self, **kwargs)
+        Camera.__init__(self, **kwargs)
 
     def add_image_mobject_from_camera(self, image_mobject_from_camera):
         # A silly method to have right now, but maybe there are things
         # we want to guarantee about any imfc's added later.
+        #from manimlib.camera.multi_camera import MultiCamera
         imfc = image_mobject_from_camera
-        assert(isinstance(imfc.camera, MovingCamera))
+        assert(isinstance(imfc.camera, Camera))
         self.image_mobjects_from_cameras.append(imfc)
 
     def update_sub_cameras(self):
@@ -36,7 +38,7 @@ class MultiCamera(MovingCamera):
     def reset(self):
         for imfc in self.image_mobjects_from_cameras:
             imfc.camera.reset()
-        MovingCamera.reset(self)
+        Camera.reset(self)
         return self
 
     def capture_mobjects(self, mobjects, **kwargs):
@@ -48,7 +50,7 @@ class MultiCamera(MovingCamera):
                     to_add, imfc.get_family()
                 )
             imfc.camera.capture_mobjects(to_add, **kwargs)
-        MovingCamera.capture_mobjects(self, mobjects, **kwargs)
+        Camera.capture_mobjects(self, mobjects, **kwargs)
 
     def get_mobjects_indicating_movement(self):
         return [self.frame] + [

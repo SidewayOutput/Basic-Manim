@@ -312,10 +312,11 @@ class WindowScene(Container):
             state["method_args"] = []
 
         for arg in args:
-            if isinstance(arg, Animation):
-                compile_method(state)
-                animations.append(arg)
-            elif inspect.ismethod(arg):
+            #if isinstance(arg, Animation):
+            #    compile_method(state)
+            #    animations.append(arg)
+
+            if inspect.ismethod(arg):
                 compile_method(state)
                 state["curr_method"] = arg
             elif state["curr_method"] is not None:
@@ -326,7 +327,14 @@ class WindowScene(Container):
                     you meant to pass in as a Scene.play argument
                 """)
             else:
-                raise Exception("Invalid play arguments")
+                #raise Exception("Invalid play arguments")
+                try:
+                    anim = prepare_animation(arg)
+                except TypeError:
+                    raise TypeError(f"Unexpected argument {arg} passed to Scene.play()")
+
+                compile_method(state)
+                animations.append(anim)
         compile_method(state)
 
         for animation in animations:
@@ -744,9 +752,9 @@ class WindowScene(Container):
                 self.camera.add_fixed_orientation_mobjects(each, **kwargs)
             elif isinstance(each, Animation):
                 self.camera.add_fixed_orientation_mobjects(each.mobject)
-                self.play(each)
+                self.play(each, **kwargs)
 
-    def post(self, *mobjects):
+    def post(self, *mobjects, **kwargs):
         
         for each in mobjects:
             if isinstance(each, (Group)):
@@ -756,7 +764,7 @@ class WindowScene(Container):
                 self.camera.add_fixed_in_frame_mobjects(each)
             elif isinstance(each, Animation):
                 self.camera.add_fixed_in_frame_mobjects(each.mobject)
-                self.play(each)
+                self.play(each, **kwargs)
 
     def get_mobject_copies(self):
         
