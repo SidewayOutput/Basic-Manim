@@ -62,7 +62,8 @@ class VMobject(Mobject):
         "n_points_per_cubic_curve": 4,
         "n_points_per_curve": 3,
     }
-
+    def init_config(self):
+        pass
     def get_group_class(self):
         return VGroup
 
@@ -409,6 +410,9 @@ class VMobject(Mobject):
         if self.is_closed() != True:
             points = [*points, *self.points[-1:-3:-1]]
         return points[::2]
+
+    def pts(self, count):
+        return list(self.get_counting_points()[count])
 
     def set_anchors_and_handles(self, anchors1, handles1, handles2, anchors2):
         assert(len(anchors1) == len(handles1) ==

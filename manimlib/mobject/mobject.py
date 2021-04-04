@@ -510,7 +510,7 @@ class Mobject(Container):
                 coor_mask=np.array([1, 1, 1]),
                 gap=True,
                 ):
-        #buff = buff if self.get_width() > 0.01 and self.get_height() > 0.01 and gap else 0
+        buff = buff if self.get_width() > 0.01 and self.get_height() > 0.01 and gap else 0
         if isinstance(mobject_or_point, Mobject):
             mob = mobject_or_point
             if index_of_submobject_to_align is not None:

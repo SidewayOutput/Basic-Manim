@@ -314,3 +314,18 @@ class GeomArrow(GeomLine):
     # TODO, should this be the default for everything?
     def copy(self):
         return self.deepcopy()
+
+class GeomElbow(VMobject):
+    CONFIG = {
+        "width": 0.2,
+        "angle": 0,
+        "side":1,
+        "position":ORIGIN
+    }
+
+    def __init__(self, **kwargs):
+        VMobject.__init__(self, **kwargs)
+        side=[self.side,0,0]
+        self.set_points_as_corners([UP, UP + side, side])
+        self.set_width(self.width, about_point=ORIGIN)
+        self.rotate(self.angle, about_point=ORIGIN)

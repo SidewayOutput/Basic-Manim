@@ -8,5 +8,6 @@ __pycache__/
 /*.tex
 media/tex/
 media/text/
+media/texts/
 media/videos/
 sidewayoutput/

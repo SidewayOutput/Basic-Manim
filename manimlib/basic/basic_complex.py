@@ -1,6 +1,7 @@
 import numpy as np
 
 from manimlib.animation.animation import AGroup
+from manimlib.animation.creation import ShowSubmobjectsOneByOne
 from manimlib.animation.composition import AnimationGroup
 from manimlib.animation.fading import FadeIn
 from manimlib.animation.growing import GrowFromCenter
@@ -10,7 +11,7 @@ from manimlib.basic.basic_compound import ShowSubmobjectsOneByOneAndFadeInThenIn
 from manimlib.basic.basic_mobject import ImageMobjectGroup, MobjectOrChars
 from manimlib.constants import DOWN, GREEN, PoweredBy, Project, UP, WHITE, YELLOW
 from manimlib.mobject.geometry import Circle, RegularPolygon, Square, Triangle
-from manimlib.mobject.mobject import Group
+from manimlib.mobject.mobject import Group, Mobject
 from manimlib.mobject.shape_matchers import Underline
 from manimlib.mobject.svg.tex_mobject import TextMobject
 from manimlib.utils.rate_functions import linear
@@ -31,7 +32,7 @@ class StartScreens01(AnimationGroup):
     [filename, filename_color, filename_scale, filename_position] = filename + ["", WHITE, 1, [0, -2.9, 0]][len(filename):]
 
     [reference, reference_color, reference_scale, reference_position] = reference + ["", YELLOW, 1, [0, -3.3, 0]][len(reference):]
-    
+
     [warning, warning_color, warning_scale, warning_position] = warning + ["", YELLOW, 1, [0, -3.7, 0]
             ][len(warning):]
     '''
@@ -173,4 +174,22 @@ class EndScreen01(AnimationGroup):
         super().__init__(
             ShowPassingFlashAndIndicateThenFadeOut(
                 MobjectOrChars(chars), **kwargs),
+        )
+
+class PlayMobject(AnimationGroup):
+    def __init__(self, mobjs="", mobj=None, scale=1,shift=[0,0,0], **kwargs):
+        if mobjs != None:
+            if mobjs == "":
+                try:
+                    mobjs = ImageMobjectGroup(np.char.mod('%01d', range(
+                        0, 10)), "sidewayoutput\\sidewayoutput2020yt")
+                except:
+                    mobjs = ImageMobjectGroup(np.char.mod(
+                        '%01d', range(9, -1, -1)), "001\\")
+        #if mobj!=None:
+        t=mobj.get_critical_point([-1,1,0])-mobjs.get_critical_point([-1,1,0])
+        mobjs.shift(t).shift(shift)
+        super().__init__(
+            ShowSubmobjectsOneByOne(mobjs.add(
+                Mobject()).scale(scale),**kwargs),
         )
