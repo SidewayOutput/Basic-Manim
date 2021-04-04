@@ -8,6 +8,8 @@ import yaml
 import types
 
 import manimlib.constants
+from manimlib.utils.config_ops import merge_dicts_recursively
+from manimlib.utils.init_config import init_customization
 
 
 def parse_cli():
@@ -88,6 +90,11 @@ def parse_cli():
             "-o", "--file_name",
             help="Specify the name of the output file, if"
                  "it should be different from the scene class name",
+        )
+        parser.add_argument(
+            "--config",
+            action="store_true",
+            help="Guide for automatic configuration",
         )
         parser.add_argument(
             "-n", "--start_at_animation_number",
@@ -213,6 +220,17 @@ def get_custom_config():
 
 
 def get_configuration(args):
+    local_config_file = "custom_config.yml"
+    global_defaults_file = os.path.join(get_manim_dir(), "manimlib", "default_config.yml")
+    if not (os.path.exists(global_defaults_file) or os.path.exists(local_config_file)):
+        print("There is no configuration file detected. Initial configuration:\n")
+        init_customization()
+    elif not os.path.exists(local_config_file):
+        print(f"""Warning: Using the default configuration file, which you can modify in {global_defaults_file}
+        If you want to create a local configuration file, you can create a file named {local_config_file}, or run manimgl --config
+        """)
+    custom_config = get_custom_config()
+
     module = get_module(args.file)
     file_writer_config = {
         # By default, write to file

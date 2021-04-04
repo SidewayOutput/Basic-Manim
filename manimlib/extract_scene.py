@@ -93,6 +93,7 @@ def prompt_user_for_choice(scene_classes):
         sys.exit(1)
 
 
+
 def get_scenes_to_render(scene_classes, config):
     if len(scene_classes) == 0:
         print(manimlib.constants.NO_SCENE_MESSAGE)
@@ -134,6 +135,7 @@ def get_scene_classes_from_module(module):
 
 def main(config):
     module = config["module"]
+
     all_scene_classes = get_scene_classes_from_module(module)
     scene_classes_to_render = get_scenes_to_render(all_scene_classes, config)
 

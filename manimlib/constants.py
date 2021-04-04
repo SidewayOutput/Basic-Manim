@@ -279,8 +279,8 @@ def initialize_directories(config):
                 "directory were both passed"
             )
 
-    TEX_DIR = config["tex_dir"] or os.path.join(MEDIA_DIR, "Tex")
-    TEXT_DIR = os.path.join(MEDIA_DIR, "texts")
+    #TEX_DIR = config["tex_dir"] or os.path.join(MEDIA_DIR, "Tex")
+    #TEXT_DIR = os.path.join(MEDIA_DIR, "texts")
     if not video_path_specified:
         VIDEO_DIR = os.path.join(MEDIA_DIR, "videos")
         VIDEO_OUTPUT_DIR = os.path.join(MEDIA_DIR, "videos")
@@ -308,9 +308,9 @@ class MyText(Text):
 '''
 
 TEX_USE_CTEX = False
-TEX_TEXT_TO_REPLACE = "YourTextHere"
+TEX_TEXT_TO_REPLACE = "[tex_expression]"#"YourTextHere"
 TEMPLATE_TEX_FILE = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)),
+    os.path.dirname(os.path.realpath(__file__)),"tex_templates",
     "tex_template.tex" if not TEX_USE_CTEX else "ctex_template.tex"
 )
 with open(TEMPLATE_TEX_FILE, "r") as infile:
