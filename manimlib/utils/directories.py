@@ -9,17 +9,15 @@ def get_directories():
 
 
 def get_temp_dir():
-    print(get_directories()["temporary_storage"])
     return get_directories()["temporary_storage"]
 
 
 def get_tex_dir():
-    #return guarantee_existence(os.path.join(get_temp_dir(), "Tex"))
-    return guarantee_existence(os.path.join("media", "Tex"))
+    return guarantee_existence(os.path.join(get_temp_dir(), "media", "Tex"))
 
 
 def get_text_dir():
-    return guarantee_existence(os.path.join(get_temp_dir(), "Text"))
+    return guarantee_existence(os.path.join(get_temp_dir(), "media", "Text"))
 
 
 def get_mobject_data_dir():

@@ -1,8 +1,26 @@
 \documentclass[preview]{standalone}
 
+\usepackage[landscape,a3paper]{geometry}
+
+\newcommand\titleA[1]{\textit{\textbf{\underline{#1}}}}
+\newcommand\bR[1]{\vspace{0.1em\enspace #1}}
+\def\theLetterSpace{-1pt}
+\def\extraWordSpace{-1pt}
+\newcommand\spaceout[2][\theLetterSpace]{%
+  \def\LocalLetterSpace{#1}\expandafter\spaceouthelpA#2 \relax\relax}
+\def\spaceouthelpA#1 #2\relax{%
+  \spaceouthelpB#1\relax\relax%
+  \ifx\relax#2\else\kern\extraWordSpace\ \kern\LocalLetterSpace\spaceouthelpA#2\relax\fi
+}
+\def\spaceouthelpB#1#2\relax{%
+  #1%
+  \ifx\relax#2\else
+    \kern\LocalLetterSpace\spaceouthelpB#2\relax%
+  \fi
+}
+\def\textspA#1{\spaceout{#1}}
+
 \usepackage[english]{babel}
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{dsfont}
@@ -17,12 +35,17 @@
 \usepackage{physics}
 \usepackage{xcolor}
 \usepackage{microtype}
-\usepackage{pifont}
 \DisableLigatures{encoding = *, family = * }
+%\usepackage[UTF8]{ctex}
 \linespread{1}
+\tolerance=1
+\emergencystretch=\maxdimen
+\hyphenpenalty=10000
+\hbadness=10000
 
 \begin{document}
 
 [tex_expression]
+%YourTextHere
 
 \end{document}

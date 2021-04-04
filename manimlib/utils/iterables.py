@@ -92,6 +92,12 @@ def stretch_array_to_length(nparray, length):
     return nparray[indices.astype('int')]
 
 
+def resize_array(nparray, length):
+    if len(nparray) == length:
+        return nparray
+    return np.resize(nparray, (length, *nparray.shape[1:]))
+
+
 def make_even(iterable_1, iterable_2):
     list_1, list_2 = list(iterable_1), list(iterable_2)
     length = max(len(list_1), len(list_2))

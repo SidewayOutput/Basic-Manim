@@ -11,7 +11,7 @@ from manimlib.constants import TEX_USE_CTEX
 import manimlib.constants as consts
 SAVED_TEX_CONFIG = {}
 
-
+consts.TEX_DIR=get_tex_dir()
 def get_tex_config():
     """
     Returns a dict which should look something like this:

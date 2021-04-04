@@ -15,7 +15,8 @@ def get_customization():
         # directory for storing tex files, mobject_data, etc.
         if not directories["temporary_storage"]:
             directories["temporary_storage"] = tempfile.gettempdir()
-
+        if directories["temporary_storage"]=="MANIM":
+            directories["temporary_storage"] = get_manim_dir()            
         # Assumes all shaders are written into manimlib/shaders
         directories["shaders"] = os.path.join(
             get_manim_dir(), "manimlib", "shaders"
