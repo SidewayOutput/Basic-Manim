@@ -47,9 +47,8 @@ class CoordinateSystem():
         if range is None and min in kwargs and max in kwargs:
             range = [kwargs.pop(min,CoordinateSystem.CONFIG['x_range'][0]), kwargs.pop(max,CoordinateSystem.CONFIG['x_range'][1]),kwargs.pop(step,CoordinateSystem.CONFIG['x_range'][2]) or 1]
         if range is not None and len(range)==2:
-            range=range+(1,)
-        #range=[*range,1][:2]
-        print("a",range)
+            #range=range+(1,)
+            range=[*range]+[1]
         return range
 
     def coords_to_point(self, *coords):
