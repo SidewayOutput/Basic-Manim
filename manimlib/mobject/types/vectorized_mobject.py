@@ -19,7 +19,8 @@ from manimlib.utils.iterables import tuplify
 from manimlib.utils.simple_functions import clip_in_place
 from manimlib.utils.space_ops import rotate_vector
 from manimlib.utils.space_ops import get_norm
-
+from manimlib.utils.bezier import get_smooth_cubic_bezier_handle_points
+from manimlib.utils.bezier import get_quadratic_approximation_of_cubic
 # TODO
 # - Change cubic curve groups to have 4 points instead of 3
 # - Change sub_path idea accordingly
@@ -62,8 +63,9 @@ class VMobject(Mobject):
         "n_points_per_cubic_curve": 4,
         "n_points_per_curve": 3,
     }
-    def init_config(self):
-        pass
+    def __init__(self, *args,**kwargs):
+        super().__init__(*args,**kwargs)
+        self.init_vars()
     def get_group_class(self):
         return VGroup
 
@@ -902,6 +904,19 @@ class VMobject(Mobject):
         vmob.pointwise_become_partial(self, a, b)
         return vmob
 
+    def init_vars(self):
+        self.fill_color=vars(self)['fill_color']
+        self.fill_opacity=vars(self)['fill_opacity']
+        self.stroke_color=vars(self)['stroke_color']
+        self.stroke_width=vars(self)['stroke_width']
+        self.stroke_opacity=vars(self)['stroke_opacity']
+        self.background_stroke_color=vars(self)['background_stroke_color']
+        self.background_stroke_width=vars(self)['background_stroke_width']
+        self.background_stroke_opacity=vars(self)['background_stroke_opacity']
+        self.shade_in_3d=vars(self)['shade_in_3d']
+        self.n_points_per_cubic_curve=vars(self)['n_points_per_cubic_curve']
+        self.dim=vars(self)['dim']
+        self.n_points_per_curve=vars(self)['n_points_per_curve']
 
 class VGroup(VMobject):
     def __init__(self, *vmobjects, **kwargs):

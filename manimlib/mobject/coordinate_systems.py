@@ -1,7 +1,7 @@
 import numpy as np
 import numbers
 
-from manimlib.constants import *
+from manimlib.constants import LIGHT_GREY,FRAME_X_RADIUS,RIGHT,DL,UP,DR,MED_SMALL_BUFF,GREY_A,FRAME_Y_RADIUS,DEGREES,LEFT,BLACK,BLUE,GREEN,ORIGIN,DOWN,OUT,PI,WHITE,SMALL_BUFF,BLUE_D
 from manimlib.mobject.functions import ParametricCurve, ParametricFunction
 from manimlib.mobject.geometry import Arrow
 from manimlib.mobject.geometry import Line
@@ -39,14 +39,17 @@ class CoordinateSystem():
         "num_sampled_graph_points_per_tick": 5,
     }
 
-    def __zzinit__(self):
-        x_range = self.minmax_to_range("x_min", "x_max", CoordinateSystem.x_range, kwargs)
-        y_range = self.minmax_to_range("y_min", "y_max", y_range, kwargs)
+    def __init__(self,*args,**kwargs):
+        self.init_vars()
 
     def minmax_to_range(self, min, max, step, range, kwargs):
         #kwargs=dict(kwargs)
         if range is None and min in kwargs and max in kwargs:
-            range = [kwargs.pop(min,CoordinateSystem.CONFIG['x_range'][0]), kwargs.pop(max,CoordinateSystem.CONFIG['x_range'][1]),kwargs.pop(step,CoordinateSystem.CONFIG['x_range'][2]), ]
+            range = [kwargs.pop(min,CoordinateSystem.CONFIG['x_range'][0]), kwargs.pop(max,CoordinateSystem.CONFIG['x_range'][1]),kwargs.pop(step,CoordinateSystem.CONFIG['x_range'][2]) or 1]
+        if range is not None and len(range)==2:
+            range=range+(1,)
+        #range=[*range,1][:2]
+        print("a",range)
         return range
 
     def coords_to_point(self, *coords):
@@ -300,7 +303,16 @@ class CoordinateSystem():
     def get_area_under_graph(self, graph, x_range, fill_color=BLUE, fill_opacity=1):
         # TODO
         pass
-
+    def init_vars(self):
+        self.dimension=vars(self)['dimension']
+        self.x_range=vars(self)['x_range']
+        self.num_sampled_graph_points_per_tick=vars(self)['num_sampled_graph_points_per_tick']
+        self.x_min=vars(self)['x_min']
+        self.x_max=vars(self)['x_max']
+        self.y_range=vars(self)['y_range']
+        self.x_axis_config=vars(self)['x_axis_config']
+        self.width=vars(self)['width']
+        #self.y_axis_config=vars(self)['y_axis_config']
 
 class Axes(VGroup, CoordinateSystem):
     CONFIG = {
@@ -332,6 +344,7 @@ class Axes(VGroup, CoordinateSystem):
         y_range = self.minmax_to_range("y_min", "y_max","y_step", y_range, kwargs)
         VGroup.__init__(self, **kwargs)
         digest_config(self, kwargs)
+        self.init_vars()
         if x_range is not None:
             self.x_range[:len(x_range)] = x_range
         if y_range is not None:
@@ -426,6 +439,11 @@ class Axes(VGroup, CoordinateSystem):
     def add_coordinates(self, x_vals=None, y_vals=None):
         self.add(self.get_coordinate_labels(x_vals, y_vals))
         return self
+    def init_vars(self):
+        self.height=vars(self)['height']
+        self.number_line_config=vars(self)['number_line_config']
+        self.axis_config=vars(self)['axis_config']
+        self.y_axis_config=vars(self)['y_axis_config']
 
 
 class ThreeDAxes(Axes):
@@ -453,6 +471,7 @@ class ThreeDAxes(Axes):
         y_range = self.minmax_to_range("y_min", "y_max", "y_step", y_range, kwargs)
         z_range = self.minmax_to_range("z_min", "z_max", "z_step", z_range, kwargs)
         Axes.__init__(self, x_range, y_range, **kwargs)
+        self.init_vars()
         if z_range is not None:
             self.z_range[:len(z_range)] = z_range
 
@@ -504,6 +523,14 @@ class ThreeDAxes(Axes):
                 submob.get_gradient_start_and_end_points = make_func(axis)
                 submob.get_unit_normal = lambda a: np.ones(3)
                 submob.set_sheen(0.2)
+    def init_vars(self):
+        self.z_range=vars(self)['z_range']
+        self.z_axis_config=vars(self)['z_axis_config']
+        self.depth=vars(self)['depth']
+        self.z_normal=vars(self)['z_normal']
+        self.num_axis_pieces=vars(self)['num_axis_pieces']
+        self.light_source=vars(self)['light_source']
+        self.depth=vars(self)['depth']
 
 
 class NumberPlane(Axes):
@@ -541,6 +568,7 @@ class NumberPlane(Axes):
         digest_config(self, kwargs)
         kwargs["number_line_config"] = self.axis_config
         Axes.__init__(self,x_range, y_range, **kwargs)
+        self.init_vars()
         self.init_background_lines()
 
     def init_background_lines(self):
@@ -634,13 +662,8 @@ class NumberPlane(Axes):
     def get_vector(self, coords, **kwargs):
         kwargs["buff"] = 0
         return Arrow(self.c2p(0, 0), self.c2p(*coords), **kwargs)
-        '''
-        return Arrow(
-            self.coords_to_point(0, 0),
-            self.coords_to_point(*coords),
-            **kwargs
-        )
-        '''
+        #return Arrow(self.coords_to_point(0, 0),self.coords_to_point(*coords),**kwargs)
+        
     def prepare_for_nonlinear_transform(self, num_inserted_curves=50):
         for mob in self.family_members_with_points():
             num_curves = mob.get_num_curves()
@@ -650,6 +673,12 @@ class NumberPlane(Axes):
                 )
             mob.make_smooth_after_applying_functions = True
         return self
+    def init_vars(self):
+        self.faded_line_style=vars(self)['faded_line_style']
+        self.background_line_style=vars(self)['background_line_style']
+        self.x_line_frequency=vars(self)['x_line_frequency']
+        self.y_line_frequency=vars(self)['y_line_frequency']
+        self.faded_line_ratio=vars(self)['faded_line_ratio']
 
 
 class ComplexPlane(NumberPlane):
@@ -657,6 +686,9 @@ class ComplexPlane(NumberPlane):
         "color": BLUE,
         "line_frequency": 1,
     }
+    def __init__(self,*args,**kwargs):
+        NumberPlane.__init__(self,*args,**kwargs)
+        self.init_vars()
 
     def number_to_point(self, number):
         number = complex(number)
@@ -727,3 +759,5 @@ class ComplexPlane(NumberPlane):
     def add_coordinates(self, *numbers):
         self.add(self.get_coordinate_labels(*numbers))
         return self
+    def init_vars(self):
+        self.faded_line_ratio=vars(self)['faded_line_ratio']

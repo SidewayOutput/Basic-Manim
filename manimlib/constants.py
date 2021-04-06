@@ -160,6 +160,7 @@ PINK = "#D147BD"
 LIGHT_PINK = "#DC75CD"
 GREEN_SCREEN = "#00FF00"
 ORANGE = "#FF862F"
+LIGHT_GREY = "#BBBBBB"
 
 # Abbreviated names for the "median" colors
 BLUE = BLUE_C
