@@ -241,15 +241,17 @@ locals().update(COLOR_MAP)
 for name in [s for s in list(COLOR_MAP.keys()) if s.endswith("_C")]:
     locals()[name.replace("_C", "")] = locals()[name]
 
-
+'''
 MEDIA_DIR = ""
 VIDEO_DIR = ""
 VIDEO_OUTPUT_DIR = ""
 TEX_DIR = ""
 TEXT_DIR = ""
-
+'''
 
 def initialize_directories(config):
+    pass
+    '''
     global MEDIA_DIR
     global VIDEO_DIR
     global VIDEO_OUTPUT_DIR
@@ -292,7 +294,7 @@ def initialize_directories(config):
     for folder in [VIDEO_DIR, VIDEO_OUTPUT_DIR, TEX_DIR, TEXT_DIR]:
         if folder != "" and not os.path.exists(folder):
             os.makedirs(folder)
-
+'''
 
 NOT_SETTING_FONT_MSG = '''
 Warning:

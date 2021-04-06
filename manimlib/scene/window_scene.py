@@ -1,4 +1,5 @@
 import inspect
+import time
 import platform
 import random as rrandom
 import warnings
@@ -42,9 +43,8 @@ class WindowScene(Container):
     }
 
     def __init__(self, **kwargs):
-        
         digest_config(self, kwargs)
-        # self.init_config()
+        # self.init_vars()
         self.init_frame(frame_width=WindowScene.CONFIG['scene_shape'][0],
                         frame_height=WindowScene.CONFIG['scene_shape'][1],
                         frame_center=WindowScene.CONFIG['scene_center'])
@@ -76,7 +76,7 @@ class WindowScene(Container):
         self.file_writer.finish()
         self.print_end_message()
 
-    def init_config(self):
+    def init_vars(self):
         
         self.camera_class = vars(self)['camera_class']
         self.always_update_mobjects = vars(self)['always_update_mobjects']
@@ -87,13 +87,26 @@ class WindowScene(Container):
             self)['start_at_animation_number']
         self.end_at_animation_number = vars(self)['end_at_animation_number']
         self.leave_progress_bars = vars(self)['leave_progress_bars']
+        self.preview=vars(self)['preview']
+        self.stop_skipping=vars(self)['stop_skipping']
+        self.interact=vars(self)['interact']
 
     def init_camera_frame(self, **kwargs):
         
         self.camera = self.camera_class(**kwargs)
 
+    def run(self):
+        self.virtual_animation_start_time = 0
+        self.real_animation_start_time = time.time()
+        self.file_writer.begin()
+
+        self.setup()
+        try:
+            self.construct()
+        except EndSceneEarlyException:
+            pass
+        self.tear_down()
     def setup(self):
-        
         """
         This is meant to be implement by any scenes which
         are comonly subclassed, and have some common setup
@@ -105,6 +118,30 @@ class WindowScene(Container):
         
         pass  # To be implemented in subclasses
     # Mobjects
+
+    def embed(self):
+        if not self.preview:
+            # If the scene is just being
+            # written, ignore embed calls
+            return
+        self.stop_skipping()
+        self.linger_after_completion = False
+        self.update_frame()
+
+        from IPython.terminal.embed import InteractiveShellEmbed
+        shell = InteractiveShellEmbed()
+        # Have the frame update after each command
+        shell.events.register('post_run_cell', lambda *a, **kw: self.update_frame())
+        # Use the locals of the caller as the local namespace
+        # once embeded, and add a few custom shortcuts
+        local_ns = inspect.currentframe().f_back.f_locals
+        local_ns["touch"] = self.interact
+        for term in ("play", "wait", "add", "remove", "clear", "save_state", "restore"):
+            local_ns[term] = getattr(self, term)
+        shell(local_ns=local_ns, stack_depth=2)
+        # End scene when exiting an embed.
+        raise EndSceneEarlyException()
+
 
     def add(self, *mobjects):
         

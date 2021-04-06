@@ -53,7 +53,7 @@ class Cam(object):
 
     def __init__(self, background=None, **kwargs):
         digest_config(self, kwargs, locals())
-        self.init_config()
+        self.init_vars()
         self.rgb_max_val = np.iinfo(self.pixel_array_dtype).max
         self.pixel_array_to_cairo_context = {}
         self.init_background()
@@ -69,7 +69,7 @@ class Cam(object):
         self.canvas = None
         return copy.copy(self)
 
-    def init_config(self):
+    def init_vars(self):
         self.background_image = vars(self)['background_image']
         self.image_mode = vars(self)['image_mode']
         self.pixel_array_dtype = vars(self)['pixel_array_dtype']

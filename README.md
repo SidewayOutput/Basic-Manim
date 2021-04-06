@@ -33,7 +33,9 @@ The aim of project "Basic-Manim" is to test and update basic manim features base
 8. pip install pyreadline
 9. pip install opencv-python
 10. pip install PyYAML
-11. ... others when necessary
+11. pip install manimpango
+
+... others when necessary
 
 #### Using Basic-Manim Under enviroment 'manim'
 1. Change directory to the working directory containing the unzipped 'Basic-Manim' files

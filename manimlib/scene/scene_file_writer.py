@@ -6,8 +6,11 @@ import os
 import _thread as thread
 from time import sleep
 import datetime
+import subprocess as sp
 
 import manimlib.constants as consts
+
+from manimlib.utils.directories import get_output_dir
 from manimlib.constants import FFMPEG_BIN
 from manimlib.constants import STREAMING_IP
 from manimlib.constants import STREAMING_PORT
@@ -39,6 +42,7 @@ class SceneFileWriter(object):
 
     def __init__(self, scene, **kwargs):
         digest_config(self, kwargs)
+        #self.init_vars()
         self.scene = scene
         self.stream_lock = False
         self.init_output_directories()
@@ -49,15 +53,15 @@ class SceneFileWriter(object):
         module_directory = self.output_directory or self.get_default_module_directory()
         scene_name = self.file_name or self.get_default_scene_name()
         if self.save_last_frame:
-            if consts.VIDEO_DIR != "":
+            if get_output_dir() != "":
                 image_dir = guarantee_existence(os.path.join(
-                    consts.VIDEO_DIR,
+                    get_output_dir(),
                     module_directory,
                     "images",
                 ))
             else:
                 image_dir = guarantee_existence(os.path.join(
-                    consts.VIDEO_OUTPUT_DIR,
+                    get_output_dir(),
                     "images",
                 ))
             self.image_file_path = os.path.join(
@@ -65,14 +69,14 @@ class SceneFileWriter(object):
                 add_extension_if_not_present(scene_name, ".png")
             )
         if self.write_to_movie:
-            if consts.VIDEO_DIR != "":
+            if get_output_dir() != "":
                 movie_dir = guarantee_existence(os.path.join(
-                    consts.VIDEO_DIR,
+                    get_output_dir(),
                     module_directory,
                     self.get_resolution_directory(),
                 ))
             else:
-                movie_dir = guarantee_existence(consts.VIDEO_OUTPUT_DIR)
+                movie_dir = guarantee_existence(get_output_dir())
             self.movie_file_path = os.path.join(
                 movie_dir,
                 add_extension_if_not_present(
@@ -167,6 +171,10 @@ class SceneFileWriter(object):
         self.add_audio_segment(new_segment, time, **kwargs)
 
     # Writers
+    def begin(self):
+        if not self.break_into_partial_movies and self.write_to_movie:
+            self.open_movie_pipe(self.get_movie_file_path())
+
     def begin_animation(self, allow_write=False):
         if self.write_to_movie and allow_write:
             self.open_movie_pipe()
@@ -211,53 +219,90 @@ class SceneFileWriter(object):
             self.scene.update_frame(ignore_skipping=True)
             self.save_final_image(self.scene.get_image())
 
-    def open_movie_pipe(self):
-        file_path = self.get_next_partial_movie_path()
-        temp_file_path = os.path.splitext(
-            file_path)[0] + '_temp' + self.movie_file_extension
+    def open_movie_pipe(self, file_path=None):
+        if file_path is None:
+            file_path = self.get_next_partial_movie_path()
+            temp_file_path = os.path.splitext(
+                file_path)[0] + '_temp' + self.movie_file_extension
 
-        self.partial_movie_file_path = file_path
-        self.temp_partial_movie_file_path = temp_file_path
+            self.partial_movie_file_path = file_path
+            self.temp_partial_movie_file_path = temp_file_path
 
-        fps = self.scene.camera.frame_rate
-        height = self.scene.camera.get_pixel_height()
-        width = self.scene.camera.get_pixel_width()
+            fps = self.scene.camera.frame_rate
+            height = self.scene.camera.get_pixel_height()
+            width = self.scene.camera.get_pixel_width()
 
-        command = [
-            FFMPEG_BIN,
-            '-y',  # overwrite output file if it exists
-            '-f', 'rawvideo',
-            '-s', '%dx%d' % (width, height),  # size of one frame
-            '-pix_fmt', 'rgba',
-            '-r', str(fps),  # frames per second
-            '-i', '-',  # The imput comes from a pipe
-            '-an',  # Tells FFMPEG not to expect any audio
-            '-loglevel', 'error',
-        ]
-        # TODO, the test for a transparent background should not be based on
-        # the file extension.
-        if self.movie_file_extension == ".mov":
-            # This is if the background of the exported
-            # video should be transparent.
-            command += [
-                '-vcodec', 'qtrle',
+            command = [
+                FFMPEG_BIN,
+                '-y',  # overwrite output file if it exists
+                '-f', 'rawvideo',
+                '-s', '%dx%d' % (width, height),  # size of one frame
+                '-pix_fmt', 'rgba',
+                '-r', str(fps),  # frames per second
+                '-i', '-',  # The imput comes from a pipe
+                '-an',  # Tells FFMPEG not to expect any audio
+                '-loglevel', 'error',
             ]
-        else:
-            command += [
-                '-vcodec', 'libx264',
-                '-pix_fmt', 'yuv420p',
-            ]
-        if self.livestreaming:
-            if self.to_twitch:
-                command += ['-f', 'flv']
-                command += ['rtmp://live.twitch.tv/app/' + self.twitch_key]
+            # TODO, the test for a transparent background should not be based on
+            # the file extension.
+            if self.movie_file_extension == ".mov":
+                # This is if the background of the exported
+                # video should be transparent.
+                command += [
+                    '-vcodec', 'qtrle',
+                ]
             else:
-                command += ['-f', 'mpegts']
-                command += [STREAMING_PROTOCOL + '://' +
-                            STREAMING_IP + ':' + STREAMING_PORT]
+                command += [
+                    '-vcodec', 'libx264',
+                    '-pix_fmt', 'yuv420p',
+                ]
+            if self.livestreaming:
+                if self.to_twitch:
+                    command += ['-f', 'flv']
+                    command += ['rtmp://live.twitch.tv/app/' + self.twitch_key]
+                else:
+                    command += ['-f', 'mpegts']
+                    command += [STREAMING_PROTOCOL + '://' +
+                                STREAMING_IP + ':' + STREAMING_PORT]
+            else:
+                command += [temp_file_path]
+            self.writing_process = subprocess.Popen(command, stdin=subprocess.PIPE)
         else:
-            command += [temp_file_path]
-        self.writing_process = subprocess.Popen(command, stdin=subprocess.PIPE)
+            stem, ext = os.path.splitext(file_path)
+            self.final_file_path = file_path
+            self.temp_file_path = stem + "_temp" + ext
+
+            fps = self.scene.camera.frame_rate
+            width, height = self.scene.camera.get_pixel_shape()
+
+            command = [
+                FFMPEG_BIN,
+                '-y',  # overwrite output file if it exists
+                '-f', 'rawvideo',
+                '-s', f'{width}x{height}',  # size of one frame
+                '-pix_fmt', 'rgba',
+                '-r', str(fps),  # frames per second
+                '-i', '-',  # The imput comes from a pipe
+                '-vf', 'vflip',
+                '-an',  # Tells FFMPEG not to expect any audio
+                '-loglevel', 'error',
+            ]
+            if self.movie_file_extension == ".mov":
+                # This is if the background of the exported
+                # video should be transparent.
+                command += [
+                    '-vcodec', 'qtrle',
+                ]
+            elif self.movie_file_extension == ".gif":
+                command += []
+            else:
+                command += [
+                    '-vcodec', 'libx264',
+                    '-pix_fmt', 'yuv420p',
+                ]
+            command += [self.temp_file_path]
+            self.writing_process = sp.Popen(command, stdin=sp.PIPE)
+
 
     def close_movie_pipe(self):
         self.writing_process.stdin.close()
@@ -359,3 +404,30 @@ class SceneFileWriter(object):
 
     def print_file_ready_message(self, file_path):
         print("\nFile ready at {}\n".format(file_path))
+    def init_vars(self):
+        self.output_directory=vars(self)['output_directory']
+        self.file_name=vars(self)['file_name']
+        self.save_last_frame=vars(self)['save_last_frame']
+        self.write_to_movie=vars(self)['write_to_movie']
+        self.movie_file_extension=vars(self)['movie_file_extension']
+        self.gif_file_extension=vars(self)['gif_file_extension']
+        self.input_file_path=vars(self)['input_file_path']
+        self.livestreaming=vars(self)['livestreaming']
+        self.to_twitch=vars(self)['to_twitch']
+        self.twitch_key=vars(self)['twitch_key']
+        self.break_into_partial_movies=vars(self)['break_into_partial_movies']
+    def update_frame(
+            self,
+            mobjects=None,
+            background=None,
+            include_submobjects=True,
+            ignore_skipping=True,
+            **kwargs):
+        pass
+
+
+    def get_frame(self):
+        return NotImplemented
+
+    def add_frames(self, *frames):
+        pass  

@@ -10,8 +10,8 @@ from functools import wraps
 from colour import Color
 import numpy as np
 
-import manimlib.constants as consts
-from manimlib.constants import *
+from manimlib.utils.directories import get_output_dir
+from manimlib.constants import WHITE,XYZ,RU,OUT,ORIGIN,UP,TAU,RIGHT,DOWN,DEFAULT_MOBJECT_TO_EDGE_BUFFER,FRAME_X_RADIUS,FRAME_Y_RADIUS,LEFT,DEFAULT_MOBJECT_TO_MOBJECT_BUFFER,MED_SMALL_BUFF,BLACK,YELLOW_C,IN
 from manimlib.container.container import Container
 from manimlib.utils.color import color_gradient
 from manimlib.utils.color import interpolate_color
@@ -48,6 +48,7 @@ class Mobject(Container):
 
     def __init__(self, **kwargs):
         Container.__init__(self, **kwargs)
+        self.init_vars()
         self.submobjects = []
         self.color = Color(self.color)
         if self.name is None:
@@ -60,6 +61,11 @@ class Mobject(Container):
         self.init_uniforms()
         self.init_points()
         self.init_colors()
+
+    def init_vars(self):
+        self.is_fixed_in_frame=vars(self)['is_fixed_in_frame']
+        self.gloss=vars(self)['gloss']
+        self.shadow=vars(self)['shadow']
 
     def __str__(self):
         return str(self.name)
@@ -107,6 +113,8 @@ class Mobject(Container):
             self.data["points"] = np.array(points)
         self.refresh_bounding_box()
         return self
+    def get_points(self):
+        return self.data["points"]
     '''
     def add(self, *mobjects):
         if self in mobjects:
@@ -200,7 +208,7 @@ class Mobject(Container):
 
     def save_image(self, name=None):
         self.get_image().save(
-            os.path.join(consts.VIDEO_DIR, (name or str(self)) + ".png")
+            os.path.join(get_output_dir(), (name or str(self)) + ".png")
         )
 
     def copy(self):
@@ -1342,6 +1350,7 @@ class Point(Mobject):
 
     def __init__(self, location=ORIGIN, **kwargs):
         Mobject.__init__(self, **kwargs)
+        self.init_vars()
         self.set_location(location)
 
     def get_width(self):
@@ -1358,6 +1367,9 @@ class Point(Mobject):
 
     def set_location(self, new_loc):
         self.set_points(np.array(new_loc, ndmin=2, dtype=float))
+    def init_vars(self):
+        self.artificial_width=vars(self)['artificial_width']
+        self.artificial_height=vars(self)['artificial_height']
 
 
 class Location(Mobject):

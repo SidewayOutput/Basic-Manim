@@ -7,11 +7,12 @@ import numpy as np
 from numpy import arange, array, max, ndarray, random
 from tqdm import tqdm as ProgressDisplay
 
-from manimlib.animation.animation import Animation,  prepare_animation, _AnimationBuilder
-from manimlib.animation.creation import ShowCreation, ShowSubmobjectsOneByOne, Write
+from manimlib.animation.animation import Animation,  prepare_animation,_AnimationBuilder
+from manimlib.animation.creation import DrawBorderThenFill, ShowCreation, ShowSubmobjectsOneByOne, Write
 from manimlib.animation.fading import FadeIn, FadeOut
 from manimlib.animation.growing import DiminishToCenter, GrowFromCenter  # ,
-from manimlib.animation.transform import ApplyMethod, MoveToTarget
+from manimlib.animation.transform import ApplyMethod, MoveToTarget,Transform
+from manimlib.animation.update import  UpdateFromAlphaFunc
 from manimlib.basic.basic_mobject import GroupedMobject, MobjectOrChars
 from manimlib.camera.camera import Camera
 from manimlib.camera.three_d_camera import ThreeDCamera
@@ -19,21 +20,23 @@ from manimlib.camera.moving_camera import MovingCamera
 from manimlib.camera.multi_camera import MultiCamera
 from manimlib.scene.window_scene import WindowScene
 
-from manimlib.constants import DEFAULT_WAIT_TIME, FRAME_HEIGHT, FRAME_WIDTH, UP, DEGREES, RIGHT, DEFAULT_MOBJECT_TO_EDGE_BUFFER, ORIGIN,GREY,DOWN,LEFT,BLUE,GREEN,YELLOW,SMALL_BUFF,MED_SMALL_BUFF,BLACK,WHITE
+from manimlib.constants import DEFAULT_WAIT_TIME, FRAME_HEIGHT, FRAME_WIDTH, UP, DEGREES, RIGHT, DEFAULT_MOBJECT_TO_EDGE_BUFFER, ORIGIN,GREY,DOWN,LEFT,BLUE,GREEN,YELLOW,SMALL_BUFF,MED_SMALL_BUFF,BLACK,WHITE,FRAME_Y_RADIUS
 from manimlib.container.container import Container
 from manimlib.mobject.mobject import Group, Mobject
-from manimlib.mobject.svg.tex_mobject import TextMobject
+from manimlib.mobject.svg.tex_mobject import TextMobject,TexMobject
 from manimlib.scene.scene_file_writer import SceneFileWriter
 from manimlib.utils.iterables import list_update
 from manimlib.utils.config_ops import digest_config
 from manimlib.mobject.types.image_mobject import ImageMobjectFromCamera
 
-from manimlib.mobject.types.vectorized_mobject import VGroup
+from manimlib.mobject.types.vectorized_mobject import VGroup,VectorizedPoint
 from manimlib.mobject.number_line import NumberLine
-from manimlib.mobject.geometry import Line
+from manimlib.mobject.geometry import Line,Rectangle,RegularPolygon
 from manimlib.mobject.functions import ParametricFunction
 from manimlib.utils.bezier import interpolate
-
+from manimlib.utils.simple_functions import fdiv
+from manimlib.utils.space_ops import angle_of_vector
+from manimlib.utils.color import color_gradient,invert_color
 
 class Scene(WindowScene):
     CONFIG = {
@@ -99,19 +102,15 @@ class Scene(WindowScene):
         "right_T_label":VGroup(),
         "right_v_line":VGroup(),
         # GraphicScene-->
+        "variable_point_label":"",
+        "area":0.,
+        "v_graph":None
     }
 
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
-        self.init_config()
+        self.init_vars()
         super().__init__(**kwargs)
-
-    def init_config(self):
-
-        self.default_angled_camera_orientation_kwargs = vars(
-            self)['default_angled_camera_orientation_kwargs']
-        self.default_camera_orientation_kwargs = vars(
-            self)['default_camera_orientation_kwargs']
 
     def get_moving_mobjects(self, *animations):
 
@@ -765,6 +764,47 @@ class Scene(WindowScene):
         secant_slope_group.kwargs["dx"] = target_dx
 
     #GraphicScene-->
+    def init_vars(self):
+        self.default_angled_camera_orientation_kwargs = vars(
+            self)['default_angled_camera_orientation_kwargs']
+        self.default_camera_orientation_kwargs = vars(
+            self)['default_camera_orientation_kwargs']
+        self.zoomed_camera_config=vars(self)['zoomed_camera_config']
+        self.zoomed_camera_image_mobject_config=vars(self)['zoomed_camera_image_mobject_config']
+        self.zoomed_display_height=vars(self)['zoomed_display_height']
+        self.zoomed_display_width=vars(self)['zoomed_display_width']
+        self.zoom_factor=vars(self)['zoom_factor']
+        self.zoomed_camera_frame_starting_position=vars(self)['zoomed_camera_frame_starting_position']
+        self.zoomed_display_center=vars(self)['zoomed_display_center']
+        self.zoomed_display_corner=vars(self)['zoomed_display_corner']
+        self.zoomed_display_corner_buff=vars(self)['zoomed_display_corner_buff']
+        self.x_max=vars(self)['x_max']
+        self.x_min=vars(self)['x_min']
+        self.x_axis_width=vars(self)['x_axis_width']
+        self.x_tick_frequency=vars(self)['x_tick_frequency']
+        self.axes_color=vars(self)['axes_color']
+        self.graph_origin=vars(self)['graph_origin']
+        self.exclude_zero_label=vars(self)['exclude_zero_label']
+        self.x_axis_label=vars(self)['x_axis_label']
+        self.y_max=vars(self)['y_max']
+        self.y_min=vars(self)['y_min']
+        self.y_axis_height=vars(self)['y_axis_height']
+        self.y_tick_frequency=vars(self)['y_tick_frequency']
+        self.y_axis_label=vars(self)['y_axis_label']
+        self.default_graph_colors_cycle=vars(self)['default_graph_colors_cycle']
+        self.default_derivative_color=vars(self)['default_derivative_color']
+        self.default_riemann_start_color=vars(self)['default_riemann_start_color']
+        self.default_riemann_end_color=vars(self)['default_riemann_end_color']
+        self.num_rects=vars(self)['num_rects']
+        self.area_opacity=vars(self)['area_opacity']
+        self.default_input_color=vars(self)['default_input_color']
+        self.variable_point_label=vars(self)['variable_point_label']
+        self.v_graph=vars(self)['v_graph']
+        self.area=vars(self)['area']
+        self.x_labeled_nums=vars(self)['x_labeled_nums']
+        self.y_labeled_nums=vars(self)['y_labeled_nums']
+        self.x_leftmost_tick=vars(self)['x_leftmost_tick']
+        self.y_bottom_tick=vars(self)['y_bottom_tick']
 
 class EndSceneEarlyException(Exception):
     pass

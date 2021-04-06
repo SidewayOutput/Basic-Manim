@@ -235,6 +235,7 @@ def get_configuration(args):
     file_writer_config = {
         # By default, write to file
         "write_to_movie": args.write_to_movie or not args.save_last_frame,
+        "break_into_partial_movies": custom_config["break_into_partial_movies"],
         "save_last_frame": args.save_last_frame,
         "save_pngs": args.save_pngs,
         "save_as_gif": args.save_as_gif,

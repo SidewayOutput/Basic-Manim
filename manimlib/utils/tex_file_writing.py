@@ -8,10 +8,10 @@ from manimlib.config import get_custom_config
 
 from manimlib.constants import TEX_TEXT_TO_REPLACE
 from manimlib.constants import TEX_USE_CTEX
-import manimlib.constants as consts
+
 SAVED_TEX_CONFIG = {}
 
-consts.TEX_DIR=get_tex_dir()
+
 def get_tex_config():
     """
     Returns a dict which should look something like this:
@@ -87,7 +87,7 @@ def tex_to_svg(tex_file_content, svg_file):
 
 def generate_tex_file(expression, template_tex_file_body):
     result = os.path.join(
-        consts.TEX_DIR,
+        get_tex_dir(),
         tex_hash(expression, template_tex_file_body)
     ) + ".tex"
     if not os.path.exists(result):
@@ -109,7 +109,7 @@ def tex_to_dvi(tex_file):
             "latex",
             "-interaction=batchmode",
             "-halt-on-error",
-            "-output-directory=\"{}\"".format(consts.TEX_DIR),
+            "-output-directory=\"{}\"".format(get_tex_dir()),
             "\"{}\"".format(tex_file),
             ">",
             os.devnull
@@ -118,7 +118,7 @@ def tex_to_dvi(tex_file):
             "-no-pdf",
             "-interaction=batchmode",
             "-halt-on-error",
-            "-output-directory=\"{}\"".format(consts.TEX_DIR),
+            "-output-directory=\"{}\"".format(get_tex_dir()),
             "\"{}\"".format(tex_file),
             ">",
             os.devnull

@@ -65,7 +65,7 @@ class Camera(Cam):
         determining which region of space the camera displys
         """
         digest_config(self, kwargs)
-        self.init_config()
+        self.init_vars()
 
         if self.frame is None:
             self.frame = CameraFrame(default_frame_stroke_width=self.default_frame_stroke_width)
@@ -82,7 +82,7 @@ class Camera(Cam):
             self.fixed_in_frame_mobjects = set()
             self.reset_rotation_matrix()
 
-    def init_config(self):
+    def init_vars(self):
         self.C3D = vars(self)['C3D']
         self.frame = vars(self)['frame']
         self.phi = vars(self)['phi']
@@ -93,6 +93,7 @@ class Camera(Cam):
         self.should_apply_shading = vars(self)['should_apply_shading']
         self.exponential_projection = vars(self)['exponential_projection']
         self.gamma = vars(self)['gamma']
+        self.default_frame_stroke_width = vars(self)['default_frame_stroke_width']
 
     # TODO, make these work for a rotated frame
     # <--2D

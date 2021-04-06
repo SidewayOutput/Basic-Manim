@@ -1,12 +1,16 @@
-import re
-import os
 import copy
 import hashlib
+import os
+import re
 import cairo
 import manimlib.constants as consts
-from manimlib.constants import *
+import manimpango
+from manimlib.constants import WHITE,NORMAL,ITALIC,OBLIQUE,BOLD,NOT_SETTING_FONT_MSG,START_X,START_Y
+from manimlib.utils.directories import get_text_dir
+from manimlib.mobject.geometry import Dot
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.utils.config_ops import digest_config
+from manimpango import PangoUtils
 TEXT_MOB_SCALE_FACTOR = 0.001048
 
 class TextSetting(object):
@@ -22,7 +26,7 @@ class TextSetting(object):
 class Text(SVGMobject):
     CONFIG = {
         # Mobject
-        'color': consts.WHITE,
+        'color': WHITE,
         'height': None,
         "stroke_width": 0,
         # Text
@@ -43,13 +47,18 @@ class Text(SVGMobject):
     }
 
     def __init__(self, text, **config):
-        self.text = text
         self.full2short(config)
         digest_config(self, config)
+        self.init_vars()
         self.lsh = self.size if self.lsh == -1 else self.lsh
-
+        text_without_tabs = text
+        if text.find('\t') != -1:
+            text_without_tabs = text.replace('\t', ' ' * self.tab_width)
+        self.text = text_without_tabs
         file_name = self.text2svg()
+        PangoUtils.remove_last_M(file_name)
         SVGMobject.__init__(self, file_name, **config)
+        self.text = text
 
         if self.t2c:
             self.set_color_by_t2c()
@@ -62,6 +71,21 @@ class Text(SVGMobject):
         if self.height is None:
             self.scale(TEXT_MOB_SCALE_FACTOR * self.font_size)
         #self.scale(0.1)
+    def init_vars(self):
+        self.size=vars(self)['size']
+        self.tab_width=vars(self)['tab_width']
+        self.t2c=vars(self)['t2c']
+        self.gradient=vars(self)['gradient']
+        self.t2g=vars(self)['t2g']
+        self.height=vars(self)['height']
+        self.font_size=vars(self)['font_size']
+        self.font=vars(self)['font']
+        self.slant=vars(self)['slant']
+        self.weight=vars(self)['weight']
+        self.t2f=vars(self)['t2f']
+        self.t2s=vars(self)['t2s']
+        self.t2w=vars(self)['t2w']
+        self.size=vars(self)['size']
 
     def find_indexes(self, word):
         m = re.match(r'\[([0-9\-]{0,}):([0-9\-]{0,})\]', word)
@@ -183,7 +207,7 @@ class Text(SVGMobject):
         if self.font == '':
             print(NOT_SETTING_FONT_MSG)
 
-        dir_name = consts.TEXT_DIR
+        dir_name = get_text_dir()#consts.TEXT_DIR
         hash_name = self.text2hash()
         file_name = os.path.join(dir_name, hash_name)+'.svg'
         if os.path.exists(file_name):
