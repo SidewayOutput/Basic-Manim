@@ -9,9 +9,9 @@ from functools import wraps
 
 from colour import Color
 import numpy as np
-
+#import manimlib.constants
 from manimlib.utils.directories import get_output_dir
-from manimlib.constants import WHITE,XYZ,RU,OUT,ORIGIN,UP,TAU,RIGHT,DOWN,DEFAULT_MOBJECT_TO_EDGE_BUFFER,FRAME_X_RADIUS,FRAME_Y_RADIUS,LEFT,DEFAULT_MOBJECT_TO_MOBJECT_BUFFER,MED_SMALL_BUFF,BLACK,YELLOW_C,IN
+from manimlib.constants import WHITE,XYZ,RU,OUT,ORIGIN,UP,TAU,RIGHT,DOWN,DEFAULT_MOBJECT_TO_EDGE_BUFFER,DEGREES,FRAME_X_RADIUS,FRAME_Y_RADIUS,LEFT,DEFAULT_MOBJECT_TO_MOBJECT_BUFFER,MED_SMALL_BUFF,BLACK,YELLOW_C,IN
 from manimlib.container.container import Container
 from manimlib.utils.color import color_gradient
 from manimlib.utils.color import interpolate_color
@@ -137,10 +137,18 @@ class Mobject(Container):
         scene.add_foreground_mobject(self)
         return self
 
+    def add_as_background(self, scene):
+        scene.bring_to_back(self)
+        return self
+
     def add_to_group(self, *gps):
         for gp in gps:
-            gp.add(self).update()
+            gp.add(self)
+            if isinstance(gp, (Group,Mobject)):
+                gp.update()
         return self
+    def add_to_scene(self, scene):
+        scene.add(self)
 
     def remove_from_group(self, *gps, t=0):
         if isinstance(self, (list, tuple)):
@@ -154,6 +162,20 @@ class Mobject(Container):
                 if t != 0:
                     gp.wait(t)
                 gp.remove(self)
+        return self
+    def remove_from_scene(self, scene):
+        scene.remove(self)
+
+    def post_to(self, scene):
+        from manimlib.camera.three_d_camera import ThreeDCamera
+        if scene.camera_class==ThreeDCamera:
+            scene.post(self)
+        return self
+
+    def pin_to(self, scene):
+        from manimlib.camera.three_d_camera import ThreeDCamera
+        if scene.camera_class==ThreeDCamera:
+            scene.pin(self)
         return self
 
     def get_array_attrs(self):
@@ -210,6 +232,16 @@ class Mobject(Container):
         self.get_image().save(
             os.path.join(get_output_dir(), (name or str(self)) + ".png")
         )
+
+    def map(self,indices):
+        from manimlib.mobject.types.vectorized_mobject import VGroup
+        for i in range(len(indices)):
+            if indices[i]<0:
+                indices[i]+=len(self)
+        try:
+            return VGroup(*list(map(self.__getitem__, indices)))
+        except:
+            return Group(*list(map(self.__getitem__, indices)))
 
     def copy(self):
         # TODO, either justify reason for shallow copy, or
@@ -320,11 +352,32 @@ class Mobject(Container):
         self.update(dt=0, recursive=recursive)
         return self
 
+    def always_refresh(self):
+        from manimlib.basic.basic_animation import Display
+        self.add_updater(lambda m:Display(m))
+        return self
+    def always_shift(self, direction=RIGHT, rate=0.1):
+        self.add_updater(
+            lambda m, dt: m.shift(dt * rate * direction)
+        )
+        return self
+
+
+    def always_rotate(self, rate=20 * DEGREES, **kwargs):
+        self.add_updater(
+            lambda m, dt: m.rotate(dt * rate, **kwargs)
+        )
+        return self
+
     # Transforming operations
 
     def apply_to_family(self, func):
         for mob in self.family_members_with_points():
             func(mob)
+
+    def apply_fx(self, func,*args,**kwargs):
+        func(self,*args,**kwargs)
+        return self
 
     def shift(self, *vectors):
         total_vector = reduce(op.add, vectors)
@@ -378,6 +431,15 @@ class Mobject(Container):
             return points
         self.apply_points_function_about_point(func, **kwargs)
         return self
+
+    def apply_transform(self, scale=1, offset=[0,0,0],rotate=0):
+
+        if isinstance(scale,(list)):
+            point=scale[1]
+            scale=scale[0]
+        else:
+            point=[0,0,0]
+        return self.scale_about_point(scale, point).shift(offset).rotate(rotate)
 
     def apply_function(self, function, **kwargs):
         # Default to applying matrix about the origin, not mobjects center
@@ -517,6 +579,7 @@ class Mobject(Container):
                 index_of_submobject_to_align=None,
                 coor_mask=np.array([1, 1, 1]),
                 gap=True,
+                offset=[0,0,0]
                 ):
         buff = buff if self.get_width() > 0.01 and self.get_height() > 0.01 and gap else 0
         if isinstance(mobject_or_point, Mobject):
@@ -538,7 +601,7 @@ class Mobject(Container):
             aligner = self
         point_to_align = aligner.get_critical_point(aligned_edge - direction)
         self.shift((target_point - point_to_align +
-                    buff * np.array(direction)) * coor_mask)
+                    buff * np.array(direction)) * coor_mask+offset)
         return self
 
     def shift_onto_screen(self, **kwargs):
@@ -636,13 +699,13 @@ class Mobject(Container):
         return self
 
     def move_to(self, point_or_mobject, aligned_edge=ORIGIN,
-                coor_mask=np.array([1, 1, 1])):
+                coor_mask=np.array([1, 1, 1]),offset=[0,0,0]):
         if isinstance(point_or_mobject, Mobject):
             target = point_or_mobject.get_critical_point(aligned_edge)
         else:
             target = point_or_mobject
         point_to_align = self.get_critical_point(aligned_edge)
-        self.shift((target - point_to_align) * coor_mask)
+        self.shift((target - point_to_align) * coor_mask+offset)
         return self
 
     def replace(self, mobject, dim_to_match=0, stretch=False):
