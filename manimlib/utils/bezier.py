@@ -1,9 +1,10 @@
 from scipy import linalg
 import numpy as np
 
+from manimlib.constants import CLOSED_THRESHOLD
 from manimlib.utils.simple_functions import choose
 
-CLOSED_THRESHOLD = 0.001
+#CLOSED_THRESHOLD = 0.001
 
 
 def bezier(points):
@@ -38,10 +39,18 @@ def partial_bezier_points(points, a, b):
     ])
 
 
+def split_bezier_points(points,*a):
+    marks=[0,*a,1]
+    pts=[]
+    [[pts.append(each) for each in partial_bezier_points(points,marks[i],marks[i+1]).tolist()] for i in range(len(marks)-1)]
+    return pts
+
+
 # Linear interpolation variants
 
 def interpolate(start, end, alpha):
     return (1 - alpha) * start + alpha * end
+    #(end-stat)*alpha+start
 
 
 def integer_interpolate(start, end, alpha):
@@ -60,8 +69,11 @@ def integer_interpolate(start, end, alpha):
         return (end - 1, 1.0)
     if alpha <= 0:
         return (start, 0)
-    value = int(interpolate(start, end, alpha))
-    residue = ((end - start) * alpha) % 1
+    ratio=(end-start)*alpha
+    value=int(ratio+start)
+    residue=ratio%1
+    #value = int(interpolate(start, end, alpha))
+    #residue = ((end - start) * alpha) % 1
     return (value, residue)
 
 
