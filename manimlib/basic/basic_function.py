@@ -90,3 +90,69 @@ def to_get_zlist(*lists, n=True):
         return [y for x in [copy.deepcopy(*lists) for i in range(n[0])] for y in x]
     else:
         return lists
+
+
+def decimal_place(number):
+    strings=str(number)
+    decimalplace=strings.find(".")
+    if decimalplace>=0:
+        return len(strings)-decimalplace-1
+    else:
+        return 0
+def log10func(x):
+    return np.log10(x)
+
+def exp10func(x):
+    return 10**x
+
+def linear(t):
+    return t
+
+def var_clear(modulename, varlen=None):
+    if varlen is None:
+        varlen=-1
+    while len(vars(modulename))>varlen:
+        h=list(vars(modulename).items())[varlen][0]
+        exec("del modulename."+ h)
+def var_set(modulename, varname=None,varvalue=None):
+    #var=zip(varname,varvalue)
+    for each in zip(varname,varvalue):
+        #h=list(vars(modulename).items())[varlen][0]
+        exec("modulename."+ each[0] +"=each[1]")
+        
+class varclr(object):
+    def __init__(self, modulename, varlen=None ):
+        self.modulename=modulename
+        if varlen is not None:
+            self.varlen=varlen
+        else:
+            self.varlen=get_len()
+
+    def clear(self):
+        while len(vars(self.modulename))>self.varlen:
+            h=list(vars(self.modulename).items())[self.varlen][0]
+            exec("del self.modulename."+ h)
+    def get_len(self):
+        return len(vars(self.modulename))
+    def get_varlen(self):
+        return self.varlen
+    def set_varlen(self,length):
+        self.varlen=length
+
+def funz(func, *args, **kwargs):
+    return lambda t: func(t, *args, **kwargs)
+
+def funz2(func, *args, **kwargs):
+    return lambda s,t: func(s,t, *args, **kwargs)
+
+def k(run_time=None,lag_ratio=None):
+    kwargs=dict()
+    if run_time is not None:
+        kwargs["run_time"]=run_time
+    if lag_ratio is not None:
+        kwargs["lag_ratio"]=lag_ratio
+    return kwargs
+
+def tex2str(texstr):
+        return texstr.replace("\\bR{", "").replace("\\parbox{25em}{", "").replace("\\", "")
+                    #.replace("\\bR{", "").replace("\\parbox{25em}{", "").replace("\\", "")
