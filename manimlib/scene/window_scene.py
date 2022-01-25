@@ -6,25 +6,28 @@ import warnings
 
 from numpy import arange, array, max, ndarray, random
 from tqdm import tqdm as ProgressDisplay
-
+#import manimlib.constants
 from manimlib.animation.animation import Animation,  prepare_animation, _AnimationBuilder
+from manimlib.animation.composition import AnimationGroup,AnimByAnim
 from manimlib.animation.creation import ShowCreation, ShowSubmobjectsOneByOne, Write
 from manimlib.animation.fading import FadeIn, FadeOut
-from manimlib.animation.growing import DiminishToCenter, GrowFromCenter  # ,
-from manimlib.animation.transform import ApplyMethod, MoveToTarget
-from manimlib.basic.basic_mobject import GroupedMobject, MobjectOrChars
+from manimlib.animation.growing import DiminishToCenter, GrowFromCenter,DiminishToPoint
+from manimlib.animation.transform import ApplyMethod, MoveToTarget,ApplyFunction,ShrinkToCenter
+from manimlib.basic.basic_mobject import GroupedMobject, MobjectOrChars, ListedMobject,ImageMobjectGroup
+from manimlib.basic.basic_animation import DFadeOut,Display
 from manimlib.camera.camera import Camera  # , CameraFrame
 from manimlib.camera.moving_camera import MovingCamera
 from manimlib.constants import DEFAULT_WAIT_TIME, FRAME_HEIGHT, FRAME_WIDTH, UP
 from manimlib.container.container import Container
 from manimlib.mobject.mobject import Group, Mobject
 from manimlib.mobject.svg.tex_mobject import TextMobject
+from manimlib.mobject.types.vectorized_mobject import VGroup,VMobject
 from manimlib.scene.scene_file_writer import SceneFileWriter
 from manimlib.utils.iterables import list_update
 from manimlib.camera.cam import Cam
 from manimlib.mobject.frame import ScreenRectangle, CameraFrame
 from manimlib.utils.config_ops import digest_config
-
+from manimlib.mobject.value_tracker import ValueTracker
 
 class WindowScene(Container):
     
@@ -41,10 +44,13 @@ class WindowScene(Container):
         # "end_at_animation_number": None,
         # "leave_progress_bars": False,
     }
-
+    
     def __init__(self, **kwargs):
+        #V.scene=self
+        self.be("scene")
         digest_config(self, kwargs)
         # self.init_vars()
+
         self.init_frame(frame_width=WindowScene.CONFIG['scene_shape'][0],
                         frame_height=WindowScene.CONFIG['scene_shape'][1],
                         frame_center=WindowScene.CONFIG['scene_center'])
@@ -54,7 +60,7 @@ class WindowScene(Container):
         self.camera_config['frame_center'] = self.frame_center
         self.init_camera_frame(**self.camera_config)
         self.file_writer = SceneFileWriter(self, **self.file_writer_config,)
-
+        
         self.mobjects = []
         # TODO, remove need for foreground mobjects
         self.foreground_mobjects = []
@@ -142,7 +148,6 @@ class WindowScene(Container):
         # End scene when exiting an embed.
         raise EndSceneEarlyException()
 
-
     def add(self, *mobjects):
         
         """
@@ -153,6 +158,7 @@ class WindowScene(Container):
         self.restructure_mobjects(to_remove=mobjects)
         self.mobjects += mobjects
         return self
+
 
     def remove(self, *mobjects):
         
@@ -177,6 +183,13 @@ class WindowScene(Container):
         setattr(self, mobject_list_name, new_list)
         return self
 
+    def get_displayed(self,mobjects):
+        mobjs=self.get_restructured_mobject_list(mobjects,self.get_restructured_mobject_list(mobjects,self.mobjects))
+        if mobjs:
+            return VGroup(*mobjs)
+        else:
+            return VMobject()
+
     def get_restructured_mobject_list(self, mobjects, to_remove):
         
         new_mobjects = []
@@ -200,9 +213,47 @@ class WindowScene(Container):
                           stop_condition=stop_condition)
 
     def play(self, *args, **kwargs):
-        
-
         self.handle_scene(self.handle_play, *args, **kwargs)
+
+    def display(self, *args, run_time=0.07, **kwargs):
+        if isinstance(args[-1],(int,float)):
+            run_time=args[-1]
+            args=args[:-1]
+        try:
+            self.play(AnimationGroup(*args), run_time=run_time, **kwargs)
+        except:
+            try:
+                self.play(AnimationGroup(*args), run_time=run_time*4, **kwargs)
+            except:
+                try:
+                    self.play(AnimationGroup(*args), run_time=run_time*2, **kwargs)
+                except:
+                    self.play(AnimationGroup(*args), run_time=1, **kwargs)
+    
+    def exec(self, animationgroup):
+        for each in animationgroup.animations:
+            try:
+                if each.xaction=="display":
+                    self.display(each,**vars(each))
+                elif each.xaction=="post":
+                    self.post(each,**vars(each))
+                elif each.xaction=="sound":
+                    try:
+                        each.time_offset
+                    except:
+                        each.time_offset=0
+                    try:
+                        self.add_sound(each.sound,time_offset=each.time_offset)
+                    except:
+                        pass
+                elif each.xaction=="fadeout":
+                    try:
+                        each.exclude_mobjs
+                    except:
+                        each.exclude_mobjs="foreground"
+                    self.fadeout(exclude_mobjs=each.exclude_mobjs)
+            except:
+                self.play(each,**vars(each))
 
     def handle_scene(self, func, *args, **kwargs):
         
@@ -352,7 +403,6 @@ class WindowScene(Container):
             #if isinstance(arg, Animation):
             #    compile_method(state)
             #    animations.append(arg)
-
             if inspect.ismethod(arg):
                 compile_method(state)
                 state["curr_method"] = arg
@@ -372,6 +422,7 @@ class WindowScene(Container):
 
                 compile_method(state)
                 animations.append(anim)
+
         compile_method(state)
 
         for animation in animations:
@@ -423,7 +474,8 @@ class WindowScene(Container):
         curr_mobjects = self.get_mobject_family_members()
         for animation in animations:
             # Begin animation
-            animation.begin()
+            #animation.begin()
+            animation.start()
             # Anything animated that's not already in the
             # scene gets added to the scene
             mob = animation.mobject
@@ -508,7 +560,7 @@ class WindowScene(Container):
             return
         for frame in frames:
             self.file_writer.write_frame(frame)
-
+    
     def increment_time(self, d_time):
         
         self.time += d_time
@@ -678,18 +730,24 @@ class WindowScene(Container):
         self.wait(post_time)
         return self
 
-    def fadeout(self, run_time=1, pre_time=0.5, post_time=0.5, exclude_mobjs=None):
-        
-        mobjarray = self.mobjects
-        if exclude_mobjs == "foreground":
-            mobjarray.remove(*self.foreground_mobjects)
+    def fadeout(self, mobjects=None, run_time=1, pre_time=0.5, post_time=0.5, exclude_mobjs=None):
+        if mobjects is None:
+            mobjarray = self.mobjects
+            #mobjarray+=self.foreground_mobjects
+        else:
+            mobjarray=list(mobjects)
+        if exclude_mobjs == "foreground" and self.foreground_mobjects:
+            for each in self.foreground_mobjects:
+                mobjarray.remove(each)
         elif isinstance(exclude_mobjs, (Mobject, Group)):
-            mobjarray.remove(*exclude_mobjs)
+            for each in exclude_mobjs:
+                mobjarray.remove(each)
+            #self.foreground_mobjects.remove(exclude_mobjs)
         else:
             self.foreground_mobjects = []
         self.wait(pre_time)
-        self.play(FadeOut(Group(*[each.suspend_updating()
-                                  for each in mobjarray]), run_time=run_time))
+        #self.play(FadeOut(Group(*[each.suspend_updating() for each in mobjarray]), run_time=run_time))
+        self.play(DFadeOut(Group(*mobjarray).suspend_updating(), run_time=run_time))
         self.wait(post_time)
         return self
 
@@ -709,16 +767,34 @@ class WindowScene(Container):
         self.wait(post_time)
         return self
 
-    def diminish(self, *mobject_or_chars, run_time=1, pre_time=0.5, post_time=1, **kwargs):
-        
+    def diminish(self, *mobjects, run_time=1, pre_time=0.5, post_time=1, **kwargs):
+        '''
         if not isinstance(mobject_or_chars, (list, tuple, ndarray)):
             mobject_or_chars = [mobject_or_chars]
-        mobject = Group(*[MobjectOrChars(each) for each in mobject_or_chars])
-        keys = ["shift"]
-        [exec("mobject."+key+"(["+','.join(str(x) for x in kwargs.get(key))+"])",
-              {"mobject": mobject}) for key in keys if key in kwargs]
-        self.wait(pre_time)
-        self.play(DiminishToCenter(mobject))
+        mobject = VGroup(*[MobjectOrChars(each) for each in mobject_or_chars])
+        '''
+        if not mobjects:
+            mobjects=ListedMobject(self.mobjects)
+        imobjs=Group()
+        vmobjs=VGroup()
+        mobjs=Group()
+        for each in mobjects:
+            if isinstance(each, ImageMobjectGroup):
+                imobjs.add(each)
+            elif isinstance(each, VMobject):
+               vmobjs.add(each)
+            else:
+                mobjs.add(each)
+        '''
+        vmobjs=VGroup(*[each.remove_from_group(mobjects) for each in mobjects if isinstance(each, VMobject)])
+        mobjs=Group(*[each for each in mobjects if isinstance(each, Mobject)])
+        '''
+        #mobject = GroupedMobject(mobjects)
+        #keys = ["shift"]
+        #[exec("mobject."+key+"(["+','.join(str(x) for x in kwargs.get(key))+"])",
+        #      {"mobject": mobject}) for key in keys if key in kwargs]
+        #self.wait(pre_time)
+        self.play(AnimationGroup(DiminishToPoint(vmobjs,[0,0,0]),DFadeOut(mobjs),ShrinkToCenter(imobjs)))
         self.wait(post_time)
         return self
 
@@ -791,9 +867,14 @@ class WindowScene(Container):
                 self.camera.add_fixed_orientation_mobjects(each.mobject)
                 self.play(each, **kwargs)
 
-    def post(self, *mobjects, **kwargs):
+    def post(self, *mobjects, foreground=False, **kwargs):
         
         for each in mobjects:
+            if foreground:
+                if isinstance(each, (Group,Mobject)):
+                    each.add_as_foreground(self)
+                elif isinstance(each, Animation):
+                    each.mobject.add_as_foreground(self)
             if isinstance(each, (Group)):
                 each.add_updater(
                     lambda group: self.camera.add_fixed_in_frame_mobjects(group))
@@ -859,5 +940,20 @@ class WindowScene(Container):
         self.play(*anims)
 
 
+    def apply_method(self,func, *args,run_time=0.001, **kwargs):
+        '''Dummy animate method
+        '''
+        #return ApplyMethod(func, *args,run_time=run_time, **kwargs)
+        func( *args, **kwargs)
+        return Animation(Mobject(),run_time=0.001)
+
+    def animate(self, *animations,run_time=0.001, **kwargs):
+        '''Dummy animate AnimByAnim
+        '''
+        return AnimByAnim(*animations,  fix_time=run_time,retain=True,**kwargs)
+
+    def print(self,*args):
+        print(*args)
+        return Display(Mobject())
 class EndSceneEarlyException(Exception):
     pass
