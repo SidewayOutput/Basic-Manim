@@ -4,7 +4,8 @@ import os
 Project = r"Basic\,-\,Manim"
 PoweredBy = ("Sideway", r"$\,\cdot\,$", "Output")
 
-
+Letters = " abcdefghijklmnopqrstuvwxyz"
+LETTERs = " ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 # There might be other configuration than pixel shape later...
 PRODUCTION_QUALITY_CAMERA_CONFIG = {
     "pixel_height": 1440,
@@ -59,10 +60,35 @@ DEFAULT_MOBJECT_TO_MOBJECT_BUFFER = MED_SMALL_BUFF
 DEFAULT_POINTWISE_FUNCTION_RUN_TIME = 3.0
 DEFAULT_WAIT_TIME = 1.0
 
+DEFAULT_ANIMATION_RUN_TIME = 1.0
+DEFAULT_ANIMATION_LAG_RATIO = 0
+DEFAULT_LAGGED_START_LAG_RATIO = 0.05
+
+DEFAULT_DOT_RADIUS = 0.08
+DEFAULT_SMALL_DOT_RADIUS = 0.04
+DEFAULT_DASH_LENGTH = 0.05
+DEFAULT_ARROW_TIP_LENGTH = 0.35
+
+CLOSED_THRESHOLD = 0.001
+EPSILON = 1e-8
+
+STRAIGHT_PATH_THRESHOLD = 0.01
+
 XY=YZ=ZX=2
 XYZ=3
 WXYZ=XYZT=4
 
+OO=ORIGIN = np.array([0., 0., 0.])
+OU=UP = np.array([0., 1., 0.])
+OD=DOWN = np.array([0., -1., 0.])
+RO=RIGHT = np.array([1., 0., 0.])
+LO=LEFT = np.array([-1., 0., 0.])
+OOI=IN = np.array([0., 0., -1.])
+OOT=OUT = np.array([0., 0., 1.])
+X_AXIS = np.array([1., 0., 0.])
+Y_AXIS = np.array([0., 1., 0.])
+Z_AXIS = np.array([0., 0., 1.])
+'''
 OO=ORIGIN = np.array((0., 0., 0.))
 OU=UP = np.array((0., 1., 0.))
 OD=DOWN = np.array((0., -1., 0.))
@@ -73,7 +99,7 @@ OOT=OUT = np.array((0., 0., 1.))
 X_AXIS = np.array((1., 0., 0.))
 Y_AXIS = np.array((0., 1., 0.))
 Z_AXIS = np.array((0., 0., 1.))
-
+'''
 RH=[1,1,1]
 LH=[1,-1,1]
 
@@ -160,7 +186,16 @@ PINK = "#D147BD"
 LIGHT_PINK = "#DC75CD"
 GREEN_SCREEN = "#00FF00"
 ORANGE = "#FF862F"
-LIGHT_GREY = "#BBBBBB"
+LIGHT_GRAY = LIGHT_GREY = "#BBBBBB"
+#Extra
+VIOLET="#9400D3"
+CYAN="#00FFFF"
+LIGHT_BLUE="#0000FF"
+LIGHT_GREEN="#ADFF2F"
+GREEN="#008000"
+SILVER="#C0C0C0"
+MAROON="#800000"
+OLIVE="#808000"
 
 # Abbreviated names for the "median" colors
 BLUE = BLUE_C
@@ -171,7 +206,7 @@ GOLD = GOLD_C
 RED = RED_C
 MAROON = MAROON_C
 PURPLE = PURPLE_C
-GREY = GREY_C
+GRAY = GREY = GREY_C
 
 COLOR_MAP = {
     "DARK_BLUE": "#236B8E",
@@ -232,6 +267,15 @@ COLOR_MAP = {
     "LIGHT_PINK": "#DC75CD",
     "GREEN_SCREEN": "#00FF00",
     "ORANGE": "#FF862F",
+
+    "VIOLET":"#9400D3",
+    "CYAN":"#00FFFF",
+    "LIGHT_BLUE":"#0000FF",
+    "LIGHT_GREEN":"#ADFF2F",
+    "GREEN":"#008000",
+    "SILVER":"#C0C0C0",
+    "MAROON":"#800000",
+    "OLIVE":"#808000",
 }
 
 
@@ -368,3 +412,4 @@ them to manim.play(), e.g.
 >>> c = Circle()
 >>> manim.play(ShowCreation(c))
 """
+
