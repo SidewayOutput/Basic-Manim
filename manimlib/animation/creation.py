@@ -1,7 +1,8 @@
 from manimlib.animation.animation import Animation
 from manimlib.animation.composition import Succession
-from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.mobject.mobject import Group
+from manimlib.mobject.types.vectorized_mobject import VMobject,VGroup
+from manimlib.mobject.mobject import Mobject, Group
+from manimlib.mobject.svg.tex_mobject import TextMobject,TexMobject
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.rate_functions import linear
@@ -18,6 +19,17 @@ class ShowPartial(Animation):
     """
 
     def interpolate_submobject(self, submob, start_submob, alpha):
+        #print(self.r_flag,self.r_color,self.r_width,self.r_opacity)
+        if self.r_flag and (self.r_color is not None or self.r_width is not None or self.r_opacity is not None):
+            self.mobject.set_stroke(self.r_color,self.r_width,self.r_opacity)
+            self.r_flag=False
+        if 1 and self.s_flag:
+            for each in self.mobject:
+                if each.get_stroke_width()==0 and each.get_fill_color() is None:
+                    each.set_stroke(width=4)
+                if each.get_stroke_opacity()==0 and each.get_fill_color() is None:
+                    each.set_stroke(opacity=1)
+            #self.s_flag=False
         submob.pointwise_become_partial(
             start_submob, *self.get_bounds(alpha)
         )
@@ -33,6 +45,71 @@ class ShowCreation(ShowPartial):
 
     def get_bounds(self, alpha):
         return (0, alpha)
+
+class Show(ShowCreation):
+
+    '''*mobjects,\n
+    +num:run_time; callable:rate_func
+    -'''
+    CONFIG = {
+        #"run_time": 0.5,
+        "rate_func": linear,
+        "lag_ratio": 0,
+        "r_color":None,
+        "r_width":None,
+        "r_opacity":None,
+        "r_flag":True,
+    }
+
+    def __init__(self, *mobjects,  **kwargs):
+        while not isinstance(mobjects[-1],(Mobject,VMobject,Group,VGroup)):
+            if isinstance(mobjects[-1],(int,float)):
+                self.run_time=mobjects[-1]
+                mobjects=mobjects[:-1]
+            elif callable(mobjects[-1]):
+                self.rate_func=mobjects[-1]
+                mobjects=mobjects[:-1]
+        if len(mobjects)==1:
+            mobject=mobjects[0]
+        else:
+            mobject=VGroup(*mobjects)
+        assert(isinstance(mobject, Mobject))
+        digest_config(self, kwargs)
+        self.mobject = mobject
+class zShow(ShowCreation):
+
+    '''*mobjects,\n
+    +num:run_time; callable:rate_func
+    -'''
+    CONFIG = {
+        "run_time": 1,
+        "rate_func": linear,
+        "lag_ratio": 1,
+    }
+
+    def __init__(self, *mobjects,  **kwargs):
+        while not isinstance(mobjects[-1],(Mobject,VMobject,Group,VGroup)):
+            if isinstance(mobjects[-1],(int,float)):
+                self.run_time=mobjects[-1]
+                mobjects=mobjects[:-1]
+            elif callable(mobjects[-1]):
+                self.rate_func=mobjects[-1]
+                mobjects=mobjects[:-1]
+        mobject=Group(*mobjects)
+        assert(isinstance(mobject, Mobject))
+        digest_config(self, kwargs)
+        self.mobject = mobject
+        mobject.fade(0)
+        if isinstance(mobject, VMobject):
+            mobject.set_stroke(width=0)
+            mobject.set_fill(opacity=0)
+    def create_starting_mobject(self):
+        start = super().create_starting_mobject()
+        start.fade(0)
+        if isinstance(start, VMobject):
+            start.set_stroke(width=0)
+            start.set_fill(opacity=0)
+        return start
 
 
 class Uncreate(ShowCreation):
@@ -53,14 +130,8 @@ class DrawBorderThenFill(Animation):
     }
 
     def __init__(self, vmobject, **kwargs):
-        self.check_validity_of_input(vmobject)
+        self.validity_of_vmobject_input(vmobject)
         super().__init__(vmobject, **kwargs)
-
-    def check_validity_of_input(self, vmobject):
-        if not isinstance(vmobject, VMobject):
-            raise Exception(
-                "DrawBorderThenFill only works for VMobjects"
-            )
 
     def begin(self):
         self.outline = self.get_outline()
