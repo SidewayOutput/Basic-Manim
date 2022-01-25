@@ -1,7 +1,10 @@
 import numpy as np
 
+from typing import Optional
+
 from manimlib.animation.animation import Animation
-from manimlib.mobject.mobject import Group
+from manimlib.constants import DEFAULT_LAGGED_START_LAG_RATIO
+from manimlib.mobject.mobject import Group, Mobject
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.config_ops import digest_config
@@ -9,10 +12,13 @@ from manimlib.utils.iterables import remove_list_redundancies
 from manimlib.utils.rate_functions import linear
 
 
-DEFAULT_LAGGED_START_LAG_RATIO = 0.05
+#DEFAULT_LAGGED_START_LAG_RATIO = 0.05
 
 
 class AnimationGroup(Animation):
+    '''*animations,\n
+    +num:run_time; -num:fix_time
+    -'''
     CONFIG = {
         # If None, this defaults to the sum of all
         # internal animations
@@ -24,15 +30,34 @@ class AnimationGroup(Animation):
         # from one and other.
         "lag_ratio": 0,
         "group": None,
+        "fix_time": None,
+        "retain":False,
+        "error":0
     }
 
     def __init__(self, *animations, **kwargs):
         digest_config(self, kwargs)
+        if len(animations)>1:
+            if isinstance(animations[-1], (int, float)):
+                if animations[-1] >= 0:
+                    self.run_time = animations[-1]
+                    animations = animations[:-1]
+                else:
+                    self.fix_time = -animations[-1]
+                    animations = animations[:-1]
+            if animations[-1].run_time<1./60:#./15
+                #self.error=animations[-1].run_time
+                animations[-1].run_time=1./15
         self.animations = animations
+        if self.fix_time is not None and self.run_time is None:
+            for anim in self.animations:
+                if  not self.retain or (anim.run_time is None or (anim.run_time>=0.001 and anim.run_time<=1)):
+                    anim.run_time = self.fix_time
         if self.group is None:
             self.group = Group(*remove_list_redundancies(
                 [anim.mobject for anim in animations]
             ))
+
         self.init_run_time()
         Animation.__init__(self, self.group, **kwargs)
 
@@ -134,9 +159,100 @@ class Succession(AnimationGroup):
         animation.interpolate(subalpha)
 
 
+class AnimByAnim(Succession):
+    CONFIG = {
+        "index": 0,
+        "active_index": 0,
+        "active_start_time": None,
+    }
+
+    def zbegin(self):
+        for anim in self.animations:
+            anim.starting_mobject = anim.create_starting_mobject()
+        assert(len(self.animations) > 0)
+        self.init_run_time()
+        self.active_animation = self.animations[0]
+        self.active_animation.begin()
+
+
+    def interpolate(self, alpha):
+        current_time = alpha * self.run_time
+        flag = 1
+        while flag:
+            if self.active_start_time == None:
+                self.active_start_time = self.anims_with_timings[self.active_index][1]
+                self.active_end_time = self.anims_with_timings[self.active_index][2]
+            if current_time >= self.active_start_time:
+                elapsed = min(current_time, self.active_end_time) - \
+                    self.active_start_time
+                active_run_time = self.active_animation.get_run_time()
+                subalpha = elapsed / active_run_time if active_run_time != 0 else 1.
+                self.active_animation.interpolate(subalpha)
+            if current_time >= self.active_end_time-self.error and self.active_index < len(self.animations)-1:
+                self.active_animation.finish()
+                self.active_index += 1
+                self.active_start_time = None
+                self.active_animation = self.animations[self.active_index]
+                self.active_animation.mobject.update()
+                self.active_animation.begin()
+            else:
+                flag = 0
+
+class PulseAnim(AnimByAnim):
+    CONFIG = {
+        "retain": True,
+        "fix_time": 0.001,
+    }
+
+class LaggedAnim(Succession):#AnimByAnim
+    CONFIG = {
+        "lag_ratio": 1.,
+        "active_index": 0,
+        "pre_init": True  # False,
+    }
+
+    def begin(self):
+        super().begin()
+        if self.pre_init:
+            for i in range(1, len(self.animations)):
+                self.animations[i].begin()
+        for anim in self.animations:
+            anim.begin()
+ 
+    def interpolate(self, alpha):
+        current_time = alpha * self.run_time
+        index = self.active_index
+        flag = 1
+        while flag:
+            if current_time >= self.anims_with_timings[index][1]:
+                elapsed = min(current_time, self.anims_with_timings[index][2]) - \
+                    self.anims_with_timings[index][1]
+                active_run_time = self.animations[index].get_run_time()
+                subalpha = elapsed / active_run_time if active_run_time != 0.0 else 1.0
+                self.animations[index].interpolate(subalpha)
+            if current_time >= self.anims_with_timings[index][2]:
+                self.animations[index].finish()
+                self.active_index += 1
+            flag = 0
+            if index < len(self.animations)-1:
+                index += 1
+                if current_time >= self.anims_with_timings[index][1]:
+                    self.active_animation = self.animations[self.active_index]
+                    if not self.pre_init:
+                        self.animations[index].begin()
+                        self.pre_init = True
+                    flag = 1
+
+
 class LaggedStart(AnimationGroup):
     CONFIG = {
         "lag_ratio": DEFAULT_LAGGED_START_LAG_RATIO,
+    }
+
+
+class OneByOne(AnimationGroup):
+    CONFIG = {
+        "lag_ratio": 1,
     }
 
 
