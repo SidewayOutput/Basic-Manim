@@ -9,15 +9,17 @@ from manimlib.animation.creation import ShowCreation
 from manimlib.animation.creation import ShowPartial
 from manimlib.animation.fading import FadeOut
 from manimlib.animation.transform import Transform
+from manimlib.basic.basic_mobject import ListedVMobject
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.geometry import Circle
 from manimlib.mobject.geometry import Dot
 from manimlib.mobject.shape_matchers import SurroundingRectangle
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.geometry import Line
+from manimlib.mobject.mobject import Group
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.config_ops import digest_config
-from manimlib.utils.rate_functions import there_and_back
+from manimlib.utils.rate_functions import there_and_back,there_and_back_with_pause
 from manimlib.utils.rate_functions import wiggle
 
 
@@ -57,12 +59,67 @@ class Indicate(Transform):
         "rate_func": there_and_back,
         "scale_factor": 1.2,
         "color": YELLOW,
+        "lag_ratio":0,
     }
+
 
     def create_target(self):
         target = self.mobject.copy()
         target.scale_in_place(self.scale_factor)
         target.set_color(self.color)
+        '''
+        for each in target:
+            w=each.get_stroke_width()
+            if w<=5:
+                each.set_stroke(width=6)
+        '''
+        return target
+
+
+class Highlight(Transform):
+    '''*mobjects, target_mobject=None, width=None, run_time=1\n
+    +num:width; -num:run_time
+    -'''
+    CONFIG = {  
+        #"run_time":0.6,
+        "rate_func": lambda t:there_and_back_with_pause(t, pause_ratio=9. / 10),
+        "scale_factor": 1,
+        "color": YELLOW,
+        "stroke_opacity":1,
+        #"lag_ratio":0,
+    }
+
+    def __init__(self, *mobjects, target_mobject=None, width=None, run_time=1,**kwargs):
+        while isinstance(mobjects[-1],(int,float)):
+            if mobjects[-1]>=0:
+                width=mobjects[-1]
+                mobjects=mobjects[:-1]
+            else:
+                run_time=-mobjects[-1]
+                mobjects=mobjects[:-1]
+        self.width=width
+        mobject=VGroup(*mobjects)
+        super().__init__(mobject,  target_mobject=None, run_time=run_time, **kwargs)
+
+    def create_target(self):
+        target = self.mobject.copy()
+        target.scale_in_place(self.scale_factor)
+        target.set_color(self.color)
+        
+        for each in ListedVMobject(target):
+            try: #?
+                width=each.get_stroke_width()
+                if self.width is not None:
+                    each.set_stroke(width=self.width)
+                elif width<=2:
+                    each.set_stroke(width=4)
+                elif width<=8:
+                    each.set_stroke(width=width*(2.6-((width-2)/6)*0.6))
+                else:
+                    each.set_stroke(width=width*1.26)
+            except:
+                pass
+        target.set_stroke(opacity=self.stroke_opacity)
         return target
 
 
