@@ -2,6 +2,7 @@ import warnings
 import numpy as np
 
 from manimlib.constants import *
+from manimlib.constants import DEFAULT_DOT_RADIUS, DEFAULT_SMALL_DOT_RADIUS, DEFAULT_DASH_LENGTH, DEFAULT_ARROW_TIP_LENGTH
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
@@ -19,10 +20,10 @@ from manimlib.utils.space_ops import normalize
 from manimlib.utils.space_ops import rotate_vector
 
 
-DEFAULT_DOT_RADIUS = 0.08
-DEFAULT_SMALL_DOT_RADIUS = 0.04
-DEFAULT_DASH_LENGTH = 0.05
-DEFAULT_ARROW_TIP_LENGTH = 0.35
+#DEFAULT_DOT_RADIUS = 0.08
+#DEFAULT_SMALL_DOT_RADIUS = 0.04
+#DEFAULT_DASH_LENGTH = 0.05
+#DEFAULT_ARROW_TIP_LENGTH = 0.35
 
 
 class TipableVMobject(VMobject):
@@ -202,6 +203,9 @@ class TipableVMobject(VMobject):
 
 
 class Arc(TipableVMobject):
+    '''start_angle=0, angle=TAU / 4, **kwargs\n
+    angle of start, central angle, *radius=1, *arc_center=ORIGIN
+    '''
     CONFIG = {
         "radius": 1.0,
         "num_components": 9,
@@ -309,8 +313,8 @@ class Circle(Arc):
         "anchors_span_full_range": False
     }
 
-    def __init__(self, **kwargs):
-        Arc.__init__(self, 0, TAU, **kwargs)
+    def __init__(self, start_angle=0, angle=TAU, **kwargs):
+        Arc.__init__(self, start_angle, angle, **kwargs)
 
     def surround(self, mobject, dim_to_match=0, stretch=False, buffer_factor=1.2):
         # Ignores dim_to_match and stretch; result will always be a circle
@@ -493,14 +497,39 @@ class Line(TipableVMobject):
             self.generate_points()
         return super().put_start_and_end_on(start, end)
 
-    def get_vector(self):
-        return self.get_end() - self.get_start()
+    def get_vector(self,direction=True):
+        if direction:
+            return self.get_end() - self.get_start()
+        else:
+            return self.get_start() - self.get_end()
+    def get_line(self, length=1,shift=None,stroke_color=None,stroke_width=None,stroke_opacity=None):
+        #from manimlib.basic.basic_geometry import GeomLine
+        if shift is None:
+            shift=[0,0,0]
+        elif isinstance(shift, (int,float)):
+            shift=self.point_from_proportion(shift)
+        if stroke_color is None and stroke_width is None  and stroke_opacity is None:
+            stroke_color,stroke_width,stroke_opacity=self.get_stroke()
+        return Line(ORIGIN, list(self.get_unit_vector())).scale_about_point(length,ORIGIN).set_stroke(stroke_color,stroke_width,stroke_opacity).shift(shift)
+    def zget_line(self, length=3,shift=None,stroke_color=None,stroke_width=None,stroke_opacity=None):
+        from manimlib.basic.basic_geometry import GeomLine
+        if shift is None:
+            shift=[0,0,0]
+        elif isinstance(shift, (int,float)):
+            shift=self.point_from_proportion(shift)
+        if stroke_color is None and stroke_width is None  and stroke_opacity is None:
+            stroke_color,stroke_width,stroke_opacity=self.get_stroke()
+        x=([ORIGIN, list(length*self.get_unit_vector())])
+        return GeomLine().set_points_as_corners(x).set_stroke(stroke_color,stroke_width,stroke_opacity).shift(shift)
 
     def get_unit_vector(self):
         return normalize(self.get_vector())
 
     def get_angle(self):
         return angle_of_vector(self.get_vector())
+
+    def get_direction(self):
+        return self.get_angle()%TAU
 
     def get_projection(self, point):
         """
@@ -732,7 +761,8 @@ class Polygon(VMobject):
     def round_corners(self, radius=0.5):
         vertices = self.get_vertices()
         arcs = []
-        for v1, v2, v3 in adjacent_n_tuples(vertices, 3):
+        for points in adjacent_n_tuples(vertices, 3):
+            '''v1, v2, v3
             vect1 = v2 - v1
             vect2 = v3 - v2
             unit_vect1 = normalize(vect1)
@@ -749,6 +779,8 @@ class Polygon(VMobject):
                 v2 + unit_vect2 * cut_off_length,
                 angle=sign * angle
             )
+            '''
+            arc=self.create_arc_pts_from_corners(points,radius=radius)
             arcs.append(arc)
 
         self.clear_points()
@@ -855,3 +887,25 @@ class RoundedRectangle(Rectangle):
     def __init__(self, **kwargs):
         Rectangle.__init__(self, **kwargs)
         self.round_corners(self.corner_radius)
+
+
+class Curve(TipableVMobject):
+    def __init__(self, vmobj,n, **kwargs):
+        TipableVMobject.__init__(self, **kwargs)
+        self.set_points(vmobj.get_nth_curve_points(n))
+
+
+class CurveLine(Line):
+    def __init__(self, vmobj,n=0,reverse=False, **kwargs):
+        Line.__init__(self, **kwargs)
+        if n<0:
+            n=n+vmobj.get_num_curves()
+        points=vmobj.get_nth_curve_points(n)
+        if reverse:
+            points=np.flip(points, 0)
+        self.set_points(points)
+
+class CurveLines(VGroup):
+    def __init__(self, vmobj,reverse=False, **kwargs):
+        VGroup.__init__(self, reverse=False,**kwargs)
+        [self.add(CurveLine(vmobj,i)) for i in range(vmobj.get_num_curves())]
