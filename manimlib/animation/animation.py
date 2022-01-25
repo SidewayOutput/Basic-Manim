@@ -1,17 +1,20 @@
 from copy import deepcopy
 import numpy as np
-
+#import manimlib.constants
+from manimlib.container.container import Manim
+from manimlib.constants import DEFAULT_ANIMATION_RUN_TIME,DEFAULT_ANIMATION_LAG_RATIO
 from manimlib.mobject.mobject import Mobject
+from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.iterables import list_update
 from manimlib.utils.rate_functions import smooth
 from manimlib.mobject.mobject import _AnimationBuilder
 
-DEFAULT_ANIMATION_RUN_TIME = 1.0
-DEFAULT_ANIMATION_LAG_RATIO = 0
+#DEFAULT_ANIMATION_RUN_TIME = 1.0
+#DEFAULT_ANIMATION_LAG_RATIO = 0
 
 
-class Animation(object):
+class Animation(Manim):
     CONFIG = {
         "run_time": DEFAULT_ANIMATION_RUN_TIME,
         "rate_func": smooth,
@@ -25,6 +28,11 @@ class Animation(object):
         # with lagged start times
         "lag_ratio": DEFAULT_ANIMATION_LAG_RATIO,
         "suspend_mobject_updating": True,
+        "r_color":None,
+        "r_width":None,
+        "r_opacity":None,
+        "r_flag":True,
+        "s_flag":True,
     }
 
     def __init__(self, mobject, **kwargs):
@@ -32,10 +40,15 @@ class Animation(object):
         digest_config(self, kwargs)
         self.mobject = mobject
 
+
     def __str__(self):
         if self.name:
             return self.name
         return self.__class__.__name__ + str(self.mobject)
+
+    def start(self):
+        #self.mobjecte=self.interpolate(0)
+        self.begin()
 
     def begin(self):
         # This is called right as an animation is being
@@ -159,6 +172,20 @@ class Animation(object):
     def is_remover(self):
         return self.remover
 
+    def zbe(self, name=None,module=None):
+        #??if name in vars(manimlib.constants):
+        #    raise Warning("Duplicate Variable")
+        if module is None:
+            exec('manimlib.constants.'+name+'=self')
+        else:
+            #x=f'{module=}'.split('=')[0] 
+            #print(x)
+            #exec(x+'=module')
+            #exec(x+'.'+name+'=self',globals(),locals())
+            exec("module"+'.'+name+'=self',globals(),locals())
+        return self
+
+
 def prepare_animation(anim):
     if isinstance(anim, _AnimationBuilder):
         return anim.build()
@@ -168,6 +195,10 @@ def prepare_animation(anim):
 
     raise TypeError(f"Object {anim} cannot be converted to an animation")
 
+class Animations(Animation):
+    def __init__(self, *mobjects, **kwargs):
+        mobject=VGroup(*mobjects)
+        Animation.__init__(self, mobject, **kwargs)
 
 
 class AGroup(Animation):
@@ -178,6 +209,7 @@ class AGroup(Animation):
         if self.name is None:
             self.name = self.__class__.__name__
         self.subanimations = []
+        Animation.__init__(self, Mobject(),  **kwargs)
         self.add(*animations)
 
     def __str__(self):
