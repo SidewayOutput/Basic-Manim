@@ -8,7 +8,7 @@ from manimlib.mobject.numbers import DecimalNumber, Integer
 from manimlib.mobject.svg.tex_mobject import TexMobject, TextMobject
 from manimlib.mobject.types.image_mobject import ImageMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup, VMobject
-from manimlib.mobject.svg.mtex_mobject import *
+#from manimlib.mobject.svg.mtex_mobject import *
 
 class MobjectOrChars(TextMobject):
     def __init__(self, mobject_or_chars):
