@@ -2,10 +2,10 @@ from manimlib.animation.animation import AGroup, Animation
 from manimlib.animation.composition import AnimationGroup, Succession, OneByOne,  AnimByAnim
 from manimlib.animation.creation import ShowCreation, Show, Write
 from manimlib.animation.fading import FadeIn, FadeOut
-from manimlib.animation.growing import GrowFromCenter
+from manimlib.animation.growing import GrowFromCenter,DiminishToPoint
 from manimlib.animation.indication import Indicate, ShowPassingFlash, Highlight
 from manimlib.animation.transform import ApplyMethod, ApplyFunction, Restore, Transform
-from manimlib.constants import YELLOW,PINK
+from manimlib.constants import YELLOW,PINK,RED
 from manimlib.mobject.mobject import Mobject, Group
 from manimlib.mobject.geometry import Square
 from manimlib.mobject.svg.tex_mobject import TextMobject, TexMobject
@@ -13,6 +13,65 @@ from manimlib.mobject.types.vectorized_mobject import VGroup, VMobject
 from manimlib.utils.config_ops import merge_config_kwargs, digest_config
 from manimlib.utils.rate_functions import rush_into, there_and_back, linear, there_and_back_with_pause,shorten,pulse,step,linear_pulse,linear_with_delay
 from manimlib.basic.basic_function import funz
+from manimlib.basic.basic_mobject import ListedVMobject
+import manimlib.constants as v
+
+
+class Add(FadeIn):
+    def __init__(self, *mobjects, run_time=0.001, lag_ratio=1, **kwargs):
+        if isinstance(mobjects[-1], (int, float)):
+            run_time = run_time
+            mobjects = mobjects[:-1]
+        super().__init__(Group(*mobjects), run_time=run_time, **kwargs)
+
+
+class XFadeOut(Succession):
+    def __init__(self, mobject, **kwargs):
+        print(mobject)
+        super().__init__(FadeoutSuccession(Animation(mobject, run_time=0.1), run_time=0.1),**kwargs)
+        #if mobject is not None and len(mobject)>1:
+        #    super().__init__(FadeoutSuccession(Animation(mobject, run_time=0.1), run_time=0.1),**kwargs)
+
+
+class DFadeOut(Succession):
+    def __init__(self, *mobjects,run_time = 0.001, **kwargs):
+        if isinstance(mobjects[-1], (int, float)):
+            run_time = mobjects[-1]
+            mobject = Group(*mobjects[:-1])
+        else:
+            mobject = Group(*mobjects)
+        super().__init__(
+            FadeOut(mobject,run_time=run_time*0.9),
+            FadeOut(mobject, starting_mobject=Mobject(),target_copy=Mobject(),run_time=run_time*0.1),
+            run_time=run_time,**kwargs)
+
+
+class Remove(DFadeOut):
+    CONFIG = {
+        "remover": True,
+    }
+    def __init__(self, *mobjects, run_time=0.001, lag_ratio=1,**kwargs):
+        if isinstance(mobjects[-1], (int, float)):
+            run_time = run_time
+            mobjects = mobjects[:-1]
+        super().__init__(Group(*mobjects), run_time=run_time, **kwargs)
+
+
+    def zcreate_target(self):
+        return self.mobject.copy().fade(1)
+
+    def zclean_up_from_scene(self, scene=None):
+        super().clean_up_from_scene(scene)
+        self.interpolate(0)
+
+
+class GrowTitle(GrowFromCenter):
+    def __init__(self, str="GrowTitle", shift=[0, 3.6, 0],width=14,font_height=None, **kwargs):
+        mobj=TextMobject(r"\titleA{"+str+"}",height=font_height, **kwargs)
+        if mobj.get_width()>width:
+            mobj.stretch_to_fit_width(width)
+        GrowFromCenter.__init__(self, mobj.shift(shift))
+
 
 class FadeInThenIndicate(Succession):
     CONFIG = {
@@ -45,6 +104,25 @@ class ShowCreationThenIndicate(Succession):
         super().__init__(
             ShowCreation(mobject, run_time=run_time*0.95),
             Indicate(mobject, run_time=run_time*0.05, **kwargs),
+            run_time=run_time, **kwargs
+        )
+
+
+class ShowThenAnimate(Succession):
+    CONFIG = {
+        "rate_func": there_and_back,
+        "scale_factor": 1,
+        "color": YELLOW,
+        # "remover": False,
+    }
+
+    def __init__(self, *mobject, run_time=1, indicate=True,  lag_ratio=0, **kwargs):
+        kwargs = merge_config_kwargs(self, kwargs, self.CONFIG)
+        if not indicate:
+            kwargs['color'] = mobject.get_color()
+        super().__init__(
+            Shows(mobject, lag_ratio=lag_ratio, run_time=run_time*0.95),
+            AnimateStrokes(mobject, run_time=run_time*0.05, **kwargs),
             run_time=run_time, **kwargs
         )
 
@@ -147,10 +225,11 @@ class ShowCreationThenFadeOut(Succession):
         "lag_ration": 0.1,
     }
 
-    def __init__(self, mobject, run_time=5, ratio_array=[0.95, 0.05], **kwargs):
+    def __init__(self, mobject, run_time=5, ratio_array=[0.95, 0.05], c_lag=1, **kwargs):
+
         super().__init__(
             ShowCreation(mobject, run_time=run_time *
-                         ratio_array[0], **kwargs),  # run_time *
+                         ratio_array[0], lag_ratio=c_lag, **kwargs),  # run_time *
             # ratio_array[0], **kwargs),  # 0.5
             FadeOut(mobject, run_time=run_time * \
                     ratio_array[1], **kwargs),  # 0.03
@@ -158,27 +237,8 @@ class ShowCreationThenFadeOut(Succession):
         )
 
 
-class DFadeOut(Succession):
-    def __init__(self, *mobjects,run_time = 0.001, **kwargs):
-        if isinstance(mobjects[-1], (int, float)):
-            run_time = mobjects[-1]
-            mobject = Group(*mobjects[:-1])
-        else:
-            
-            mobject = Group(*mobjects)
-        super().__init__(
-            FadeOut(mobject, run_time=run_time*0.9),
-            FadeOut(mobject, run_time=run_time*0.1),
-            run_time=run_time,**kwargs)
 
 
-class XFadeOut(Succession):
-    def __init__(self, mobject, **kwargs):
-        super().__init__(
-            FadeoutSuccession(Animation(mobject, run_time=0.1), run_time=0.1),
-            # FadeoutSuccession(Animation(mobject,run_time=0.1),run_time=0.1),
-
-            **kwargs)
 
 
 class ShowPassingFlashAndIndicateThenFadeOut(AnimationGroup):
@@ -188,9 +248,9 @@ class ShowPassingFlashAndIndicateThenFadeOut(AnimationGroup):
         "color": YELLOW,
     }
 
-    def __init__(self, mobject, **kwargs):
+    def __init__(self, mobject, run_time=4, **kwargs):
         self.mobject_color = YELLOW
-        self.total_run_time = 4
+        self.total_run_time = run_time
         self.total_lag_ratio = 1
         kwargs = merge_config_kwargs(self, kwargs)
 
@@ -225,7 +285,7 @@ class Delay(OneByOne):
 
     def __init__(self, *animations, time=None, group=False, time_wait=None, **kwargs):
         merge_config_kwargs(self, kwargs)
-        while isinstance(animations[-1], (int, float, bool)):
+        while len(animations)>0 and isinstance(animations[-1], (int, float, bool)):
             if isinstance(animations[-1], bool):
                 if int(animations[-1]) == 1:
                     group = True
@@ -236,9 +296,12 @@ class Delay(OneByOne):
                 elif animations[-1] < 0:
                     time_wait = -animations[-1]
                 animations = animations[:-1]
-        if group:
-            animations = [AnimationGroup(*animations, **kwargs)]
-        anims = AGroup(*animations)
+        if len(animations)>0:
+            if group:
+                animations = [AnimationGroup(*animations, **kwargs)]
+            anims = AGroup(*animations)
+        else:
+            anims=AGroup(Animation(Mobject()))
         if time is not None:
             self.time=time
         if self.delay:
@@ -279,12 +342,6 @@ class Shock(Wait):
         super().__init__(*animations, time=time, group=group, **kwargs)
 
 
-class GrowTitle(GrowFromCenter):
-    def __init__(self, str, shift=[0, 3.6, 0], **kwargs):
-        GrowFromCenter.__init__(self, TextMobject(
-            r"\titleA{"+str+"}").shift(shift))
-
-
 class Display(AnimationGroup):
     '''*mobjects, run_time=0.001, lag_ratio=1,\n
     num:run_time
@@ -310,24 +367,6 @@ class Display(AnimationGroup):
             AnimationGroup(*animations, run_time=run_time, lag_ratio=lag_ratio, **kwargs))
 
 
-class Remove(Animation):
-    CONFIG = {
-        "remover": True,
-    }
-    def __init__(self, *mobjects, run_time=0.001, lag_ratio=1, **kwargs):
-        if isinstance(mobjects[-1], (int, float)):
-            run_time = run_time
-            mobjects = mobjects[:-1]
-        super().__init__(Group(*mobjects), run_time=run_time, **kwargs)
-
-class Add(Animation):
-    def __init__(self, *mobjects, run_time=0.001, lag_ratio=1, **kwargs):
-        if isinstance(mobjects[-1], (int, float)):
-            run_time = run_time
-            mobjects = mobjects[:-1]
-        super().__init__(Group(*mobjects), run_time=run_time, **kwargs)
-
-
 class AnimateStroke(AnimByAnim):
     '''mobject, color=None, width=None, opacity=None, scale_factor=1, run_time=1, highlight=1, func=None, rate_func=linear, pause_ratio=4./5, f_color=None, f_width=None,\n
     color->-num:run_time
@@ -340,16 +379,19 @@ class AnimateStroke(AnimByAnim):
         # "stroke_opacity":1
     }
 
-    def __init__(self, mobject, color=YELLOW, width=10, opacity=None, scale_factor=1, run_time=1, highlight=1, func=None, rate_func=linear, pause_ratio=4./5, f_color=None, f_width=None, f_opacity=None, lag_ratio=1, copy=False, fadeout=None,offset=4, ratio=[0.95, 0.05], name="mobject", **kwargs):
+    def __init__(self, mobject, color=YELLOW, width=None, opacity=1, scale_factor=1, run_time=1, highlight=1, func=None, rate_func=linear, pause_ratio=4./5, f_color=None, f_width=None, f_opacity=None, lag_ratio=1, copy=False, fadeout=None,offset=4, ratio=[0.95, 0.05], name="mobject", **kwargs):
         #for each in ["zrate_func", "scale_factor", "color", "stroke_opacity", "width"]:
         #    try:
         #        if locals()[each]:
         #            kwargs[each] = locals()[each]
         #    except:
         #        pass
-        #kwargs = merge_config_kwargs(self, kwargs,self.CONFIG)
+        kwargs = merge_config_kwargs(self, kwargs,self.CONFIG)
         if copy:
-            mobject=mobject.copy()
+            if isinstance(mobject, Group):
+                mobject=Group(*[each.copy() for each in ListedMobject(mobject) ])
+            else:                
+                mobject=mobject.copy()
         if isinstance(color, (int, float)):
             if color < 0:
                 run_time = -color
@@ -364,12 +406,12 @@ class AnimateStroke(AnimByAnim):
             animations.add(FadeOut(mobject,run_time=0.001))
         if highlight:
             kws=dict()
-            if color is not None:
-                kws['color']=color
-            if width is not None:
-                kws['width']=width
-            if opacity is not None:
-                kws['opacity']=opacity
+            #if color is not None:
+            kws['color']=color
+            #if width is not None:
+            kws['width']=width
+            #if opacity is not None:
+            kws['opacity']=opacity
             animations.add_to_back(Highlight(
                     mobject,scale_factor=scale_factor, run_time=run_time,**kws))
         else:
@@ -377,7 +419,7 @@ class AnimateStroke(AnimByAnim):
                 ApplyMethod(mobject.set_stroke, color, width, opacity, rate_func=funz(linear_pulse,0.05,0.9), run_time=run_time))
                 #Transform(mobject,mobject.copy().set_stroke(color, width, opacity), rate_func=funz(linear_pulse,0.05,0.9), run_time=run_time))
                 #ShowCreation(mobject.copy().set_stroke(color, width, opacity), rate_func=funz(linear_pulse,0.05,0.9), run_time=run_time))
-        super().__init__(*animations, **kwargs)
+        super().__init__(*animations, lag_ratio=self.lag_ratio,**kwargs)
 
 
 class MoveTo(AnimationGroup):
@@ -395,6 +437,8 @@ class MoveTo(AnimationGroup):
             #[a, b, c], [x, y, z]
             mobjects = list(map(list, zip(mobjs1, mobjs2)))
             #[a, x], [b, y], [c, z]
+        else:
+            mobjects=[mobjs1,mobjs2]
         [animations.add(ApplyMethod(self.func(each[0]), each[1], **kwargs))
          for each in mobjects]
         super().__init__(*animations, lag_ratio=lag_ratio, run_time=run_time, **kwargs)
@@ -448,6 +492,31 @@ class Transforms(AnimationGroup):
         super().__init__(*animations, lag_ratio=lag_ratio, run_time=run_time, **kwargs)
 
 
+class Displays(AnimByAnim):
+    '''*mobjects, run_time=0.001, lag_ratio=1,\n
+    num:run_time
+    -'''
+
+    def __init__(self, *mobjects, run_time=0.05, lag_ratio=1, **kwargs):
+        while isinstance(mobjects[-1], (int, float)):
+            run_time = run_time
+            mobjects = mobjects[:-1]
+        animations = AGroup()
+        vmobjs = VGroup()
+        mobjs = Group()
+        for each in mobjects:
+            if isinstance(each, (VMobject)):
+                vmobjs.add(each)
+            else:
+                mobjs.add(each)
+        if len(mobjs) > 0:
+            animations.add(Show(mobjs, run_time=run_time, **kwargs))
+        if len(vmobjs) > 0:
+            animations.add(Write(vmobjs, run_time=run_time, **kwargs))
+        super().__init__(
+            AnimationGroup(*animations, run_time=run_time, lag_ratio=lag_ratio, **kwargs))
+
+
 class Shows(OneByOne):
     '''*mobjects, rate_func=shorten, **kwargs\n
     '''
@@ -458,8 +527,16 @@ class Shows(OneByOne):
     def __init__(self, *mobjects, rate_func=shorten, **kwargs):
         animations = AGroup()
         for mobject in mobjects:
-            animations.add(self.CONFIG["funx"](mobject, rate_func=rate_func,**kwargs))
+            if isinstance(mobject, list):
+                kkwargs=kwargs.copy()
+                kkwargs.update(mobject[1])
+                animations.add(self.CONFIG["funx"](mobject[0], rate_func=rate_func,**kkwargs))
+            elif isinstance(mobject,tuple):
+                animations.add(self.CONFIG["funx"](VGroup(*mobject), rate_func=rate_func,**kwargs))
+            else:
+                animations.add(self.CONFIG["funx"](mobject, rate_func=rate_func,**kwargs))
         super().__init__(*animations, **kwargs)
+
 
 class Highlights(OneByOne):
     CONFIG = {
@@ -479,8 +556,20 @@ class Highlights(OneByOne):
             animations.add(self.CONFIG["funx"](mobject, width=width,**kwargs))
         super().__init__(*animations, run_time=run_time,lag_ratio=lag_ratio, rate_func=rate_func, **kwargs)
 
+
+class Refresh(Highlight):
+        CONFIG = {  
+        "run_time":0.001,
+        #"rate_func": lambda t:there_and_back_with_pause(t, pause_ratio=9. / 10),
+        #"scale_factor": 1,
+        "color": None,
+        #"stroke_opacity":1,
+        #"lag_ratio":0,
+    }
+
+
 class AnimateStrokes(AnimationGroup):#
-    def __init__(self, *args, func=AnimateStroke, run_time=None, fix_time=None, lag_ratio=0,**kwargs):
+    def __init__(self, *args, func=AnimateStroke, run_time=None, fix_time=None, lag_ratio=1,**kwargs):
         animations=AGroup()
         runtime={}
         fixtime={}
@@ -491,7 +580,7 @@ class AnimateStrokes(AnimationGroup):#
                 fixtime.update({'run_time':-args[-1]})
             args=args[:-1]
         if run_time is not None:
-            runtime.update({'runtime':runtime})
+            runtime.update({'run_time':run_time})
         if fix_time is not None:
             fixtime.update({'fix_time':fix_time})
         for arg in args:
@@ -508,4 +597,3 @@ class AnimateStrokes(AnimationGroup):#
                     arg=arg[1:]
             animations.add(func(mobj,*arg,**kws))
         super().__init__(*animations,lag_ratio=lag_ratio,**runtime)
-
