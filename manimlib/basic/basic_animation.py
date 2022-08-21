@@ -20,7 +20,7 @@ import manimlib.constants as v
 class Add(FadeIn):
     def __init__(self, *mobjects, run_time=0.001, lag_ratio=1, **kwargs):
         if isinstance(mobjects[-1], (int, float)):
-            run_time = run_time
+            run_time = mobjects[-1]
             mobjects = mobjects[:-1]
         super().__init__(Group(*mobjects), run_time=run_time, **kwargs)
 
@@ -52,7 +52,7 @@ class Remove(DFadeOut):
     }
     def __init__(self, *mobjects, run_time=0.001, lag_ratio=1,**kwargs):
         if isinstance(mobjects[-1], (int, float)):
-            run_time = run_time
+            run_time = mobjects[-1]
             mobjects = mobjects[:-1]
         super().__init__(Group(*mobjects), run_time=run_time, **kwargs)
 
@@ -262,7 +262,7 @@ class ShowPassingFlashAndIndicateThenFadeOut(AnimationGroup):
 
 
 class ShowCreations(AnimationGroup):
-    def __init__(self, mobjects, **kwargs):
+    def __init__(self, *mobjects, **kwargs):
         animations = AGroup()
         [animations.add(ShowCreation(each, **kwargs)) for each in mobjects]
         super().__init__(
