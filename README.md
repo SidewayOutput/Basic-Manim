@@ -2,7 +2,7 @@ Manim from [github.com/3b1b/manim](https://github.com/3b1b/manim) is an animatio
 by [github.com/3b1b](https://github.com/3b1b).
 
 The aim of project "Basic-Manim" is to test and update basic manim features based on 
-[3b1b manim @19Dec2019](https://github.com/3b1b/manim/tree/ba2f2f8840df37b2e7de2841c961d9a02b03c9e4) for SidewayOutput Projects. Please note that the method of trial and error is used in developing Basic-Manim and backward compatibility is not guaranteed
+[3b1b manim @19Dec2019](https://github.com/3b1b/manim/tree/ba2f2f8840df37b2e7de2841c961d9a02b03c9e4) (Cairo Version) for SidewayOutput Projects. Please note that the method of trial and error is used in developing Basic-Manim and backward compatibility is not guaranteed
 
 ## Installation for Windows 10
 ### Download Basic-Manim
