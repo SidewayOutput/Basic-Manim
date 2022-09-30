@@ -149,7 +149,8 @@ class Mobject(Container):
         return self
     def add_to_scene(self, scene):
         scene.add(self)
-
+        return self
+        
     def remove_from_group(self, *gps, t=0):
         if isinstance(self, (list, tuple)):
             for mob in self:
@@ -264,6 +265,14 @@ class Mobject(Container):
 
     def deepcopy(self):
         return copy.deepcopy(self)
+        
+    def copy0(self):
+        from manimlib.mobject.types.vectorized_mobject import VMobject
+        if isinstance(self,VMobject):
+            return self.copy().set0()
+        else:
+            return self.copy()
+        
 
     def generate_target(self, use_deepcopy=False):
         self.target = None  # Prevent exponential explosion
@@ -356,12 +365,12 @@ class Mobject(Container):
         from manimlib.basic.basic_animation import Display
         self.add_updater(lambda m:Display(m))
         return self
+
     def always_shift(self, direction=RIGHT, rate=0.1):
         self.add_updater(
             lambda m, dt: m.shift(dt * rate * direction)
         )
         return self
-
 
     def always_rotate(self, rate=20 * DEGREES, **kwargs):
         self.add_updater(
@@ -396,7 +405,7 @@ class Mobject(Container):
             mob.points += total_vector
         return self
 
-    def scale(self, scale_factor, **kwargs):
+    def scale(self, scale_factor, whole=1, dim=None, func=None, **kwargs):
         """
         Default behavior is to scale about the center of the mobject.
         The argument about_edge can be a vector, indicating which side of
@@ -406,10 +415,24 @@ class Mobject(Container):
         Otherwise, if about_point is given a value, scaling is done with
         respect to that point.
         """
-        self.apply_points_function_about_point(
-            lambda points: scale_factor * points, **kwargs
-        )
+        if dim is None:
+            funx = lambda points: scale_factor * points
+        else:
+            def funx(points):
+                points[:, dim] *= scale_factor
+                return points
+        func=func or funx
+        if whole:
+            self.apply_points_function_about_point(func, **kwargs
+            )
+        else:
+            for each in self:
+                each.apply_points_function_about_point(func, **kwargs
+            )
         return self
+
+    def stretch(self, factor, dim, **kwargs):
+        return self.scale(scale_factor=factor, dim=dim, **kwargs)
 
     def rotate_about_origin(self, angle, axis=OUT, axes=[]):
         return self.rotate(angle, axis, about_point=ORIGIN)
@@ -424,13 +447,6 @@ class Mobject(Container):
 
     def flip(self, axis=UP, **kwargs):
         return self.rotate(TAU / 2, axis, **kwargs)
-
-    def stretch(self, factor, dim, **kwargs):
-        def func(points):
-            points[:, dim] *= factor
-            return points
-        self.apply_points_function_about_point(func, **kwargs)
-        return self
 
     def apply_transform(self, scale=1, offset=[0,0,0],rotate=0):
 
