@@ -1,7 +1,7 @@
 import numpy as np
 from manimlib.basic.basic_function import to_get_offset_lists, to_get_offsets
-from manimlib.constants import BLUE, DARK_GRAY,DOWN, DEGREES, DL, DR, LEFT,  ORIGIN, OUT, RED, RIGHT, UL, UR, WHITE, UP, GRAY, PI, TAU, DEFAULT_STROKE_WIDTH,DEFAULT_ARROW_TIP_LENGTH,GOLD
-from manimlib.mobject.geometry import Line, Polygon, Arc, ArrowTip, CurveLine, Triangle,TipableVMobject, Circle, Ellipse
+from manimlib.constants import BLUE, DARK_GRAY,DOWN, DEGREES, DL, DR, LEFT,  ORIGIN, OUT, RED, RIGHT, UL, UR, WHITE, UP, GRAY, PI, TAU, GREEN, DEFAULT_STROKE_WIDTH,DEFAULT_ARROW_TIP_LENGTH,GOLD,DEFAULT_DOT_RADIUS,DEFAULT_SMALL_DOT_RADIUS,DEFAULT_MICRO_DOT_RADIUS
+from manimlib.mobject.geometry import Line, Polygon, Arc, ArrowTip, CurveLine, Triangle,TipableVMobject, Circle, Ellipse,CurveLines, Arrow
 from manimlib.mobject.mobject import Mobject, Location
 from manimlib.mobject.types.vectorized_mobject import VGroup, VMobject
 from manimlib.utils.config_ops import digest_config, generate_args, generate_args_kwargs, merge_config_kwargs
@@ -14,8 +14,8 @@ class GeomPoint(VMobject):
     {length},           [mobject_or_point]
     '''
     CONFIG = {
-        "color": BLUE,
-        "stroke_width": 2,
+        "color": GREEN,
+        "stroke_width": 3,
     }
 
     def __init__(self, *args, **kwargs):
@@ -62,6 +62,9 @@ class GeomPoint(VMobject):
                 [self.from_offset, self.to_offset])
                 ))]
         '''
+
+    def ptc(self):#????
+        return self.get_center()
 
 
 class GeomMark(GeomPoint):
@@ -171,6 +174,26 @@ class GeomPolyline(Polygon):
         self.set_points_as_corners(
             [*vertices]
         )
+
+
+class GeomLines(VGroup):
+    CONFIG = {
+        "color": WHITE,
+        "mark_paths_closed": False,
+        "close_new_points": False,
+    }
+
+    def __init__(self, *vertices, mark_paths_closed=None, **kwargs):
+        VMobject.__init__(self, **kwargs)
+        if isinstance(vertices[-1],(int, float)):
+            if vertices[-1]:
+                mark_paths_closed=True
+            vertices=vertices[:-1]
+        polyline=VMobject()
+        if mark_paths_closed:
+            vertices=[*vertices,vertices[0]]
+        self.add(*CurveLines(polyline.set_points_as_corners(
+            vertices), **kwargs))
 
 
 class zGeomCurves(TipableVMobject):
@@ -302,9 +325,9 @@ class GeomRectangle(GeomPolygon):
             generate_args(self, args, self.args)
         kwargs = merge_config_kwargs(self, kwargs, self.args_name)
         self.mobject_or_point = Location(self.mobject_or_point)
-        ul, ur, dr, dl = np.add(np.multiply(
-            (UL, UR, DR, DL), [self.width/2, self.height/2, 0]), self.mobject_or_point)
-        GeomPolygon.__init__(self, ul, ur, dr, dl, **kwargs)
+        ul, dl, dr, ur = np.add(np.multiply(
+            (UL, DL, DR, UR), [self.width/2, self.height/2, 0]), self.mobject_or_point)
+        GeomPolygon.__init__(self, ul, dl, dr, ur, **kwargs)
 
 
 class GeomSquare(GeomRectangle):
@@ -468,10 +491,16 @@ class GeomArc(VMobject):
             if angle <= start_angle:
                 angle = TAU+angle
             angle = angle-start_angle
-        if not ccw:
+        if ccw<0:
+            if ccw<-1:
+                angle=angle-PI
+            else:
+                angle=angle-TAU
+        elif not ccw:
             angle = -angle
         self.start_angle = start_angle
         self.angle = angle
+
 
     def generate_points(self):
         self.init_pre_positioned_points().scale(self.radius, about_point=ORIGIN).shift(self.tmp_center)
@@ -513,10 +542,42 @@ class GeomArc(VMobject):
             self.points[-1] - self.get_arc_center()
         ) % TAU
 
+    def get_radius(self):
+        return get_norm(self.points[0]-self.get_center())
 
 
-class GeomCircle(Circle):
-    pass
+class GeomCircle(GeomArc):
+    CONFIG = {
+        "color": RED,
+        "close_new_points": True,
+        "anchors_span_full_range": False
+    }
+    def __init__(self, start_angle=0, angle=TAU, arc_center=None, quad=1,ccw=1,  **kwargs):
+        GeomArc.__init__(self, start_angle,angle,arc_center,quad,ccw,**kwargs)
+
+
+class GeomDot(GeomCircle):
+    CONFIG = {
+        "radius": DEFAULT_DOT_RADIUS,
+        "stroke_width": 0,
+        "fill_opacity": 1.0,
+        "color": WHITE
+    }
+
+    def __init__(self, point=ORIGIN, **kwargs):
+        Circle.__init__(self, arc_center=point, **kwargs)
+
+
+class GeomSmallDot(GeomDot):
+    CONFIG = {
+        "radius": DEFAULT_SMALL_DOT_RADIUS,
+    }
+
+
+class GeomMicroDot(GeomDot):
+    CONFIG = {
+        "radius": DEFAULT_MICRO_DOT_RADIUS,
+    }
 
 
 class GeomSemiCircle(VMobject):
@@ -542,7 +603,7 @@ class DimAngle(VMobject):
         "theta": PI/4
     }
 
-    def __init__(self, v1=None, v2=None, start=0, **kwargs):
+    def __init__(self, v1=None, v2=None, start=0, shift=None, **kwargs):
         VMobject.__init__(self, **kwargs)
         self.set_points_as_corners([RIGHT, ORIGIN,  self.get_point(v1, v2)])
         self.set_width(self.width, about_point=ORIGIN)
@@ -550,6 +611,8 @@ class DimAngle(VMobject):
             self.rotate(angle_of_vector(v1), about_point=ORIGIN)
         elif start!=0:
             self.rotate(start, about_point=ORIGIN)
+        if shift is not None:
+            self.shift(shift)
         
     def get_point(self, v1, v2):
         if v1 is not None and v2 is None:
@@ -569,6 +632,12 @@ class DimAngle(VMobject):
 
     def ratio_r(self, p=TAU):
         return (p-self.theta)/p
+
+    def ptc(self):
+        return self.pts(1)
+
+    def lines(self):
+        return GeomLines(*self.pts())
 
 
 class DimRadian(DimAngle):
@@ -609,7 +678,8 @@ class DimArc(GeomArc):
             angle = angle_of_vector(self.point_from_proportion(
                 1-ratio)-self.point_from_proportion(1))
             self.add(tips.rotate(angle, about_point=self.point_from_proportion(1)))
-        self.set_color(color or self.color)
+        self.set_style(stroke_color=self.stroke_color,fill_color=self.stroke_color)
+        #self.set_color(self.stroke_color)
         #self.shift(self.arc_center)
 
     def add_tip():
@@ -649,21 +719,57 @@ class zDimArc(Arc):
 
 class DimHashArc(VMobject):
     CONFIG = {
-        "color": GOLD,
+        #"color": GOLD,
         "stroke_color": GOLD,
         "stroke_opacity": 0.8,
         "stroke_width": 4,#DEFAULT_STROKE_WIDTH,
-        "radius":0.25,
+        "radius":0.15,
         "dimhash": GeomArc,
     }
-    def __init__(self, start_angle=0, angle=TAU/4, arc_center=None, radius=0.25, count=1, space=0.1, quad=1, ccw=1,  *args, **kwargs):
+    def __init__(self, start_angle=0, angle=TAU/4, arc_center=None, radius=None, count=1, space=0.07, quad=1, ccw=1,  arc_only=0,*args, **kwargs):
         VMobject.__init__(self, **kwargs)
+        if radius is not None:
+            self.radius=radius
         hash = VMobject()
-        for i in range(count):
-            hash.append_vectorized_mobject(GeomArc(start_angle=start_angle, angle=angle, arc_center=arc_center, radius=self.radius+i*space,  quad=quad,ccw=ccw,  *args, **kwargs))
+        GeomArc.init_parameters(self,start_angle,angle,arc_center,quad,ccw)
+        #print(self.start_angle,self.angle)
+        if arc_only or abs(abs(self.angle)-PI/2)>0.0004:
+            for i in range(count):
+                hash.append_vectorized_mobject(GeomArc(start_angle=self.start_angle, angle=self.angle, arc_center=self.tmp_center, radius=self.radius+i*space,  quad=0,ccw=1,  *args, **kwargs))
+            #self.append_vectorized_mobject(hash)
+            #self.set_stroke(self.stroke_color,self.stroke_width,self.stroke_opacity)
+        else:
+            GeomLine([0, 0, 0], [np.cos(self.start_angle+self.angle), np.sin(self.start_angle+self.angle), 0]).be("line4a",self),
+            DimHashElbow(self.line4a, self.tmp_center, ccw=-ccw, width=self.radius,  stroke_color=self.stroke_color).be("test",self),
+            hash.append_vectorized_mobject(self.test.submobjects[0])###????ccw=-ccw  REDRED
         self.append_vectorized_mobject(hash)
-        #self.set_stroke(self.stroke_color,self.stroke_width,self.stroke_opacity)
+        self.set_stroke(self.stroke_color,self.stroke_width,self.stroke_opacity)
 
+
+class DimHashArcs(VGroup, DimHashArc):
+    def __init__(self, mobject, arc_center=None, radius=None, count=1, space=0.07, quad=1, ccw=1,  *args, **kwargs):
+        VGroup.__init__(self, **kwargs)
+        if radius is not None:
+            self.radius=radius
+        if isinstance(mobject, VGroup):
+            numofcurves = len(mobject.submobjects)
+            def func(i):
+                cnt=[-1]+list(range(numofcurves))
+                return [mobject.submobjects[cnt[i]],mobject.submobjects[cnt[i+1]]]
+        else:
+            numofcurves = mobject.get_num_curves()
+            def func(i):
+                cnt=[-1]+[list(range(numofcurves))]
+                return CurveLines(mobject)[cnt[i]:cnt[i+1]+1]
+        if isinstance(count, int):
+            def number(i):
+                return count
+        elif callable(count):
+            def number(i):
+                return count(i)+1
+        #[self.add(GeomArc(*func(i), arc_center=arc_center, radius=self.radius+i*space,  quad=quad,ccw=ccw,  *args, **kwargs)) for i in range(numofcurves)]
+        [self.add(DimHashArc(*func(i), arc_center=arc_center, count=number(i),radius=self.radius,  quad=quad,ccw=ccw,  *args, **kwargs)) for i in range(numofcurves)]
+        self.set_stroke(self.stroke_color,self.stroke_width,self.stroke_opacity)
 
 
 class DimHashElbow(VGroup):
@@ -672,6 +778,7 @@ class DimHashElbow(VGroup):
 
     def __init__(self, line, line_or_ratio=0, width=0.2, ccw=1, stroke_color=GRAY, reverse=False, *args, **kwargs):
         VGroup.__init__(self, **kwargs)
+        
         if not isinstance(line, VGroup):
             angle = -ccw*PI/2
             if reverse:
@@ -709,7 +816,7 @@ class SymHash(VMobject):
     '''line, length, **kwargs\n
     
     -'''
-
+    num=1
     def __init__(self, line, length, **kwargs):
         VMobject.__init__(self, **kwargs)
         hash = line.get_line(length).rotate(PI/2)
@@ -717,9 +824,10 @@ class SymHash(VMobject):
 
 
 class SymHashV(VMobject):
+    num=2
     def __init__(self, line, length, FW=1, angle=PI/4, **kwargs):
         VMobject.__init__(self, **kwargs)
-        line = line.get_line(length/2/np.sin(angle))
+        line = line.get_line(FW*length/2/np.sin(angle))
         pt = line.pts(-1)
         hash = line.copy().rotate(angle, about_point=pt)
         hash.append_vectorized_mobject(
@@ -731,65 +839,173 @@ class Hash(VMobject):
     '''     '''
     CONFIG = {
         "stroke_color": GOLD,
-        "stroke_opacity": 0.8,
-        "stroke_width": 4,
+        "stroke_opacity": 0.9,
+        "stroke_width": 3,
         "dimhash": SymHash,
-    }
+        "length": None,
+        "space":0.07,
+        "zscale":1,
+        "hash":None,
+        "hashmark": VMobject(),
+        }
 
-    def __init__(self, line, count=1, posratio=0.5, length=0.3, space=0.1, **kwargs):
+    def __init__(self, line, count=1, posratio=0.5, zlength=None, zspace=0.07, **kwargs):
+        digest_config(self, kwargs)
         VMobject.__init__(self, **kwargs)
+        self.line=line
         if not isinstance(line, VGroup):
-            if line.get_length() <= length*5:
-                length = min(max(0.15, line.get_length()/5), 0.3)
-            hash = self.dimhash(line, length)
-            hashmark = VMobject()
-            for i in range(count):
-                hashmark.append_vectorized_mobject(hash.copy().move_to(
-                    i*space*line.get_unit_vector()
-                ))
-            self.append_vectorized_mobject(hashmark.move_to(
-                line.point_from_proportion(posratio)))
+            #if self.length is not None and length is None:
+            #    length=self.length
+            self.length = self.length or min(max(0.15, line.get_length()/8), 0.25)
+            #hash = self.dimhash(line, self.length).set_stroke_color(self.stroke_color).set_stroke_width(self.stroke_width)
+            self.hash=self.hash or self.dimhash(self.line, self.length).set_stroke_color(self.stroke_color).set_stroke_width(self.stroke_width)
+            self.set_hashmark(count)
+            self.append_vectorized_mobject(self.hashmark.scale(self.zscale).move_to(line.point_from_proportion(posratio)))
         else:
             kwargs["dimhash"] = self.dimhash
-            self.add(Hashs(line, count=count, posratio=posratio,
-                           length=length, space=space, **kwargs))
+            self.add(Hashes(line, count=count, posratio=posratio,
+                           length=self.length, space=self.space, stroke_color=self.stroke_color,stroke_width=self.stroke_width, **kwargs))
+    
+    def get_count(self):
+        return self.get_num_curves()/self.dimhash.num
 
+    def set_hashmark(self, count):
 
-class Hashs(VGroup):
+        self.hashmark = self.hashmark or VMobject()
+        for i in range(count):
+            self.hashmark.append_vectorized_mobject(self.hash.copy().move_to(
+                i*self.space*self.line.get_unit_vector()
+            ))
+        return self.hashmark
+
+    def get_length(self):
+        return get_norm(np.array(self.get_curve(0).pts(-1))-np.array(self.get_curve(0).pts(0)))
+
+class Hashes(VGroup,Hash):
     CONFIG = {
         "dimhash": SymHash,
+        #"length": None
     }
 
-    def __init__(self, mobject, count=1, posratio=0.5, width=4, length=0.3, color=GOLD, opacity=1, space=0.07, *args, **kwargs):
+    def __init__(self, mobject, count=1, posratio=0.5, width=3, zlength=None, zstroke_color=GOLD, zopacity=1, zspace=0.07, *args, **kwargs):
+        digest_config(self, kwargs)
         VGroup.__init__(self, **kwargs)
         if isinstance(mobject, VGroup):
             numofcurves = len(mobject.submobjects)
-
             def func(i):
                 return mobject.submobjects[i]
         else:
             numofcurves = mobject.get_num_curves()
-
             def func(i):
                 return CurveLine(mobject, i)
-        if isinstance(count, int):
+        if count==0:
+            def number(i):
+                return i+1
+        elif isinstance(count, int):
             def number(i):
                 return count
         elif callable(count):
             def number(i):
                 return count(i)+1
         kwargs["dimhash"] = self.dimhash
-        [self.add(Hash(func(i), number(i), posratio=posratio, length=length,
-                       space=space,  *args, **kwargs)) for i in range(numofcurves)]
+        [self.add(Hash(func(i), number(i), posratio=posratio, length=self.length,
+                       space=self.space,  *args, **kwargs)) for i in range(numofcurves)]
 
 
 class HashV(Hash):
     CONFIG = {
         "dimhash": SymHashV,
+        "length": 0.15
     }
 
 
-class HashVs(Hashs):
+class HashVs(Hashes):
     CONFIG = {
         "dimhash": SymHashV,
+        "length": 0.15
     }
+
+class GeomIntersection(GeomPosition):
+    def __init__(self, mobj1, mobj2, count=0,on=0,*args, **kwargs):
+        if isinstance(mobj1, (Circle,GeomCircle)) and isinstance(mobj2, (Circle,GeomCircle),):
+            self.c1=[x1,y1,z1]=mobj1.get_center()
+            self.c2=[x2,y2,z2]=mobj2.get_center()
+            r1=mobj1.radius
+            r2=mobj2.radius
+            d=((x1-x2)**2+(y1-y2)**2)**0.5
+            l=(r1**2-r2**2+d**2)/(2*d)
+            h=(r1**2.-l**2.)**0.5
+            self.p=x1+l*(x2-x1)/d
+            self.q=y1+l*(y2-y1)/d
+            self.s=h*(y2-y1)/d
+            self.t=h*(x2-x1)/d
+            self.x=self.p-(-1)**count*self.s
+            self.y=self.q+(-1)**count*self.t
+            self.p0=[self.p-self.s,self.q+self.t,0]
+            self.p1=[self.p+self.s,self.q-self.t,0]
+        elif isinstance(mobj1, (Circle,GeomCircle)) and isinstance(mobj2, (Line,GeomLine)) or isinstance(mobj2, (Circle,GeomCircle)) and isinstance(mobj1, (Line,GeomLine)):
+            if isinstance(mobj1, (Circle,GeomCircle)):
+                self.c=[cx,cy,cz]=mobj1.get_center()
+                self.r=cr=mobj1.get_radius()
+                self.p1=[x1,y1,z1]=mobj2.pts(0)
+                self.p2=[x2,y2,z2]=mobj2.pts(1)
+            else:
+                self.c=[cx,cy,cz]=mobj2.get_center()
+                self.r=cr=mobj2.get_radius()
+                self.p1=[x1,y1,z1]=mobj1.pts(0)
+                self.p2=[x2,y2,z2]=mobj1.pts(1)
+            x1=x1-cx
+            x2=x2-cx
+            y1=y1-cy
+            y2=y2-cy
+            dx=x2-x1
+            dy=y2-y1
+            dr=dx**2+dy**2#dr=(dx**2+dy**2)**0.5
+            D=x1*y2-x2*y1
+            if dy<0:
+                sgn=-1
+            else:
+                sgn=1
+            #print(cr,dr,D)
+            DD=(cr**2*dr-D**2)**0.5
+            self.x=cx+(D*dy+sgn*(-1)**count*dx*DD)/dr
+            self.y=cy+(-D*dx+abs(dy)*(-1)**count*DD)/dr
+            self.p0=[self.x,self.y,0]
+            self.p1=[cx+(D*dy-sgn*dx*DD)/dr,cy+(-D*dx-abs(dy)*DD)/dr,0]
+
+            #print("x",abs((x2-x1)*(y1+cy-self.y)-(x1+cx-self.x)*(y2-y1))/((x2-x1)**2+(y2-y1)**2)**0.5)
+                
+        elif isinstance(mobj1, (Line,GeomLine)) and isinstance(mobj2, (Line,GeomLine)):
+            self.p0=line_intersection(mobj1,mobj2)
+        GeomPoint.__init__(self, self.p0,*args, **kwargs)#1e-8, 1e-8,
+    
+    def get_pos0(self):
+        return self.p0
+    
+    def get_pos1(self):
+        return self.p1
+    ####
+    def get_point0(self):
+        return self.p0
+    ####
+    def get_point1(self):
+        return self.p1
+
+    def get_point(self,n=1):
+        if n==1:
+            return GeomPoint(self.p1)
+        elif n==0:
+            return self
+        else:
+            pass
+
+class GeomVector(Arrow):
+    def __init__(self, end=RIGHT, start=ORIGIN, **kwargs):
+        Arrow.__init__(self, start, end, **kwargs)
+    
+    def get_vector(self):
+        return self.get_end() - self.get_start()        
+        #    return array(self.end)-array(self.start)
+
+    def get_angle(self):
+        return angle_of_vector(self.get_vector())
