@@ -1,4 +1,4 @@
-Manim from [github.com/3b1b/manim](https://github.com/3b1b/manim) is an animation engine 
+Manim from [github.com/3b1b/manim](https://github.com/3b1b/manim) (now branch [cairo-backend](https://github.com/3b1b/manim/tree/cairo-backend)) is an animation engine 
 by [github.com/3b1b](https://github.com/3b1b).
 
 The aim of project "Basic-Manim" is to test and update basic manim features based on 
