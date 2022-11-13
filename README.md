@@ -19,8 +19,8 @@ The aim of project "Basic-Manim" is to test and update basic manim features base
 
 #### Create a Conda Enviroment for Basic-Manim
 1. Open Anaconda Prompt
-2. Create a conda environment, 'manim', using `conda create -n manim python=3.8`
-3. Activate the 'manim' environment using `conda activate manim`
+2. Create a conda environment, 'basicmanim', using `conda create -n basicmanim python=3.8`
+3. Activate the 'manim' environment using `conda activate basicmanim`
 
 #### Install Python Packages Under enviroment 'manim'
 1. pip install colour
@@ -39,7 +39,7 @@ The aim of project "Basic-Manim" is to test and update basic manim features base
 
 #### Using Basic-Manim Under enviroment 'manim'
 1. Change directory to the working directory containing the unzipped 'Basic-Manim' files
-2. Run `python -m manim tutorial\basicmanim\basicmanim_transform_001a.py -pl` to verify the installation
+2. Run `python -m manim tutorial\basicmanim\test.py -pl` to verify the installation
 
 ## License
 
