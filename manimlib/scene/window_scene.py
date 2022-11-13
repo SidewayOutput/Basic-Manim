@@ -6,7 +6,7 @@ import warnings
 
 from numpy import arange, array, max, ndarray, random
 from tqdm import tqdm as ProgressDisplay
-#import manimlib.constants
+import manimlib.constants
 from manimlib.animation.animation import Animation,  prepare_animation, _AnimationBuilder
 from manimlib.animation.composition import AnimationGroup,AnimByAnim
 from manimlib.animation.creation import ShowCreation, ShowSubmobjectsOneByOne, Write
@@ -32,13 +32,13 @@ from manimlib.mobject.value_tracker import ValueTracker
 class WindowScene(Container):
     
     CONFIG = {
-        "scene_shape": (FRAME_WIDTH, FRAME_HEIGHT),
+        "scene_shape": None,#(FRAME_WIDTH, FRAME_HEIGHT),
         "scene_center": [0, 0, 0],
         "camera_class": Camera,
         "always_update_mobjects": False,
         "random_seed": 0,
-        # "camera_config": {},
-        # "file_writer_config": {},
+        #"camera_config": {},######
+        #"file_writer_config": {},#####
         # "skip_animations": False,
         # "start_at_animation_number": None,
         # "end_at_animation_number": None,
@@ -50,7 +50,10 @@ class WindowScene(Container):
         self.be("scene")
         digest_config(self, kwargs)
         # self.init_vars()
-
+        #print("pixel",self.camera_config["pixel_width"],self.camera_config["pixel_height"],)
+        if WindowScene.CONFIG['scene_shape'] is None:
+            WindowScene.CONFIG['scene_shape']=(manimlib.constants.FRAME_WIDTH,manimlib.constants.FRAME_HEIGHT)
+            #self.cam.cairo_line_width_multiple=self.cam.cairo_line_width_multiple*16*9
         self.init_frame(frame_width=WindowScene.CONFIG['scene_shape'][0],
                         frame_height=WindowScene.CONFIG['scene_shape'][1],
                         frame_center=WindowScene.CONFIG['scene_center'])
@@ -60,7 +63,9 @@ class WindowScene(Container):
         self.camera_config['frame_center'] = self.frame_center
         self.init_camera_frame(**self.camera_config)
         self.file_writer = SceneFileWriter(self, **self.file_writer_config,)
-        
+        print("frame",self.camera_config["frame_width"],self.camera_config["frame_height"],)        
+        FRAME_WIDTH=self.camera_config["frame_width"]
+        FRAME_HEIGHT=self.camera_config["frame_height"] 
         self.mobjects = []
         # TODO, remove need for foreground mobjects
         self.foreground_mobjects = []
@@ -112,6 +117,7 @@ class WindowScene(Container):
         except EndSceneEarlyException:
             pass
         self.tear_down()
+
     def setup(self):
         """
         This is meant to be implement by any scenes which
@@ -121,7 +127,8 @@ class WindowScene(Container):
         pass
 
     def construct(self):
-        
+        self.add(TextMobject("Hello World."))
+        self.wait(5)
         pass  # To be implemented in subclasses
     # Mobjects
 
@@ -643,7 +650,7 @@ class WindowScene(Container):
         
         print("Played {} animations".format(self.num_plays))
 
-    def __str__(self):
+    def z__str__(self):
         
         return self.__class__.__name__
     # TODO, remove this, and calls to this ZoomedScene
@@ -955,5 +962,7 @@ class WindowScene(Container):
     def print(self,*args):
         print(*args)
         return Display(Mobject())
+
+
 class EndSceneEarlyException(Exception):
     pass

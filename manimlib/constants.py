@@ -1,47 +1,104 @@
+
 import numpy as np
 import os
 
 Project = r"Basic\,-\,Manim"
 PoweredBy = ("Sideway", r"$\,\cdot\,$", "Output")
-
+import manimlib
 Letters = " abcdefghijklmnopqrstuvwxyz"
 LETTERs = " ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+
 # There might be other configuration than pixel shape later...
-PRODUCTION_QUALITY_CAMERA_CONFIG = {
-    "pixel_height": 1440,
-    "pixel_width": 2560,
-    "frame_rate": 60,
-}
+SHORT_QUALITY_CAMERA_CONFIG = {
+    "pixel_height": 2560,
+        "pixel_width": 1440,
+        "frame_rate": 60,
+    }
+SHORT_LOW_QUALITY_CAMERA_CONFIG = {
+    "pixel_height": 854,
+        "pixel_width": 480,
+        "frame_rate": 15,
+    }
+ORIENTATION=1
 
-HIGH_QUALITY_CAMERA_CONFIG = {
-    "pixel_height": 1080,
-    "pixel_width": 1920,
-    "frame_rate": 60,
-}
-
-MEDIUM_QUALITY_CAMERA_CONFIG = {
-    "pixel_height": 720,
-    "pixel_width": 1280,
-    "frame_rate": 30,
-}
-
-LOW_QUALITY_CAMERA_CONFIG = {
-    "pixel_height": 480,
-    "pixel_width": 854,
-    "frame_rate": 15,
-}
+ASPECT_RATIO = (16.0 / 9.0)**((-1)**(1-ORIENTATION))
 
 
+if ASPECT_RATIO>1:
+    PRODUCTION_QUALITY_CAMERA_CONFIG = {
+        "pixel_height": 1440,
+        "pixel_width": 2560,
+        "frame_rate": 60,
+    }
+
+    HIGH_QUALITY_CAMERA_CONFIG = {
+        "pixel_height": 1080,
+        "pixel_width": 1920,
+        "frame_rate": 60,
+    }
+
+    MEDIUM_QUALITY_CAMERA_CONFIG = {
+        "pixel_height": 720,
+        "pixel_width": 1280,
+        "frame_rate": 30,
+    }
+
+    LOW_QUALITY_CAMERA_CONFIG = {
+        "pixel_height": 480,
+        "pixel_width": 854,
+        "frame_rate": 15,
+    }
+
+    EXTRA_QUALITY_CAMERA_CONFIG = {
+        "pixel_height": 480,
+        "pixel_width": 854,
+        "frame_rate": 3,
+    }
+else:
+    PRODUCTION_QUALITY_CAMERA_CONFIG = {
+        "pixel_height": 2560,
+        "pixel_width": 1440,
+        "frame_rate": 60,
+    }
+
+    HIGH_QUALITY_CAMERA_CONFIG = {
+        "pixel_height": 1920,
+        "pixel_width": 1080,
+        "frame_rate": 60,
+    }
+
+    MEDIUM_QUALITY_CAMERA_CONFIG = {
+        "pixel_height": 1280,
+        "pixel_width": 720,
+        "frame_rate": 30,
+    }
+
+    LOW_QUALITY_CAMERA_CONFIG = {
+        "pixel_height": 854,#848,864
+        "pixel_width": 480,#477,486
+        "frame_rate": 15,
+    }
+
+    EXTRA_QUALITY_CAMERA_CONFIG = {
+        "pixel_height": 854,#848,864
+        "pixel_width": 480,#477,486
+        "frame_rate": 3,
+    }
+#2560,1920,1280,1024,864,720,704
+#1440,1080,720,576,486,405,396
 DEFAULT_POINT_DENSITY_2D = 25
 DEFAULT_POINT_DENSITY_1D = 250
 
 # Sizes relevant to default camera frame
-ASPECT_RATIO = 16.0 / 9.0
+
 FRAME_HEIGHT = 8.0
 FRAME_WIDTH = FRAME_HEIGHT * ASPECT_RATIO
+def fwidth(ASPECT_RATIO):return FRAME_HEIGHT * ASPECT_RATIO
 #ASPECT_RATIO=DEFAULT_PIXEL_WIDTH / DEFAULT_PIXEL_HEIGHT
 FRAME_Y_RADIUS = FRAME_HEIGHT / 2
 FRAME_X_RADIUS = FRAME_WIDTH / 2
+def fxradius(ASPECT_RATIO):return fwidth(ASPECT_RATIO) / 2
 
 DEFAULT_PIXEL_HEIGHT = PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_height"] #=1440
 DEFAULT_PIXEL_WIDTH = PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_width"] #=2560
@@ -51,6 +108,13 @@ SMALL_BUFF = 0.1
 MED_SMALL_BUFF = 0.25
 MED_LARGE_BUFF = 0.5
 LARGE_BUFF = 1
+
+DWELL_BUFF=0.001
+TINY_BUFF=0.01
+DWELL_RATIO=0.001
+TINY_RATIO=0.01
+DWELL_TIME=0.001
+TINY_TIME=0.01
 
 DEFAULT_MOBJECT_TO_EDGE_BUFFER = MED_LARGE_BUFF
 DEFAULT_MOBJECT_TO_MOBJECT_BUFFER = MED_SMALL_BUFF
@@ -63,9 +127,11 @@ DEFAULT_WAIT_TIME = 1.0
 DEFAULT_ANIMATION_RUN_TIME = 1.0
 DEFAULT_ANIMATION_LAG_RATIO = 0
 DEFAULT_LAGGED_START_LAG_RATIO = 0.05
+DEFAULT_FADE_LAG_RATIO = 0
 
 DEFAULT_DOT_RADIUS = 0.08
 DEFAULT_SMALL_DOT_RADIUS = 0.04
+DEFAULT_MICRO_DOT_RADIUS = 1E-6
 DEFAULT_DASH_LENGTH = 0.05
 DEFAULT_ARROW_TIP_LENGTH = 0.35
 
@@ -73,6 +139,9 @@ CLOSED_THRESHOLD = 0.001
 EPSILON = 1e-8
 
 STRAIGHT_PATH_THRESHOLD = 0.01
+
+#ZEROs=np.array([[-1E-8,0,0],[0,0,0],[0,0,0],[1E-8,0,0]])
+ZEROs=np.array([[0,0,0],[0,0,0],[0,0,0],[0,0,0]])
 
 XY=YZ=ZX=2
 XYZ=3
