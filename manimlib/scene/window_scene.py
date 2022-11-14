@@ -127,9 +127,9 @@ class WindowScene(Container):
         pass
 
     def construct(self):
-        self.add(TextMobject("Hello World."))
+        self.add(TextMobject("Hello, World!\\\\Welcome to Basic-Manim."))
         self.wait(5)
-        pass  # To be implemented in subclasses
+        #pass  # To be implemented in subclasses
     # Mobjects
 
     def embed(self):
