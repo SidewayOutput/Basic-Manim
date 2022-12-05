@@ -278,6 +278,10 @@ class Arc(TipableVMobject):
         return angle_of_vector(
             self.points[-1] - self.get_arc_center()
         ) % TAU
+    
+    def get_radius(self):
+        return get_norm(self.pts(0)-self.get_arc_center())
+        
 
 
 class ArcBetweenPoints(Arc):
@@ -895,6 +899,28 @@ class Curve(TipableVMobject):
         self.set_points(vmobj.get_nth_curve_points(n))
 
 
+class CurveZip(TipableVMobject):
+    def __init__(self, *vmobj, **kwargs):
+        if isinstance(vmobj[-1],(int,float)):
+            self.stroke_opacity=vmobj[-1]
+            vmobj=vmobj[:-1]
+        mobj=VGroup(*vmobj).copy()
+        if len(mobj)>1:
+            for i in range(1,len(mobj)):
+                if mobj[i-1].pts(1)==mobj[i].pts(1):
+                    mobj[i].reverse_points()
+                elif mobj[i-1].pts(0)==mobj[i].pts(0):
+                    mobj[i-1].reverse_points()
+        TipableVMobject.__init__(self, **kwargs)
+        self.append_vectorized_mobjects(*mobj)
+
+    def lines(self, n=None):
+        if n is None:
+            return CurveLines(self)
+        else:
+            return CurveLines(self)[n]
+
+
 class CurveLine(Line):
     def __init__(self, vmobj,n=0,reverse=False, **kwargs):
         Line.__init__(self, **kwargs)
@@ -908,4 +934,4 @@ class CurveLine(Line):
 class CurveLines(VGroup):
     def __init__(self, vmobj,reverse=False, **kwargs):
         VGroup.__init__(self, reverse=False,**kwargs)
-        [self.add(CurveLine(vmobj,i)) for i in range(vmobj.get_num_curves())]
+        [self.add(CurveLine(vmobj,i, reverse=reverse,**kwargs)) for i in range(vmobj.get_num_curves())]
