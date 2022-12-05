@@ -9,9 +9,10 @@
 \newcommand\titleA[1]{\textit{\textbf{\underline{#1}}}}
 \newcommand\bR[1]{\vspace{0.1em\enspace #1}}
 \newcommand\Part[0]{\par\hspace*{1em}}
+\newcommand\Parc[1]{\Bxs#1\Bxs\par}%{\centering\fbox{#1}\par}
 \newcommand\BR[3]{\vspace{#1 em \hspace{#2 em} #3}}
 \newcommand\Br[1]{\BR{0.2}{0.9}{#1}}
-
+\newcommand\Bxs{\hspace*{\fill}}
 \newcommand\Bxz[2]{\linespread{#1}\selectfont\parbox{#2}}
 \newcommand\Bxa{\Bxz{0.9}{14em}}
 \newcommand\Bxah[1]{\Bxa{\hangindent=1em #1}}
@@ -19,10 +20,13 @@
 \newcommand\Bxbh[1]{\Bxb{\hangindent=1em #1}}
 \newcommand\Bxc[1]{\Bxz{0.9}{#1 em}}
 \newcommand\Bxch[2]{\Bxc{#1}{\hangindent=1em #2}}
+\newcommand\Bxp{\Bxz{0.9}{10.4em}}
+\newcommand\Bxph[1]{\Bxp{\hangindent=1em #1}}
 
 \newcommand\Bxat[1]{\Bxa{\hspace*{1em}#1}}
 \newcommand\Bxbt[1]{\Bxb{\hspace*{1em}#1}}
 \newcommand\Bxct[2]{\Bxc #1{\hspace*{1em}#2}}
+\newcommand\Bxpt[1]{\Bxp{\hspace*{1em}#1}}
 
 \newcommand\Bxx[1]{\hangindent=#1\makebox[#1][l]}
 \newcommand\Bxai[3]{\Bxa{\Bxx{#1}{#2}#3}}
@@ -34,11 +38,16 @@
 \newcommand\Bxbib[2]{\Bxb{\Bxx{1.4em}{#1}#2}}
 \newcommand\Bxcia[3]{\Bxc{#1}{\Bxx{0.9em}{#2}#3}}
 \newcommand\Bxcib[3]{\Bxc{#1}{\Bxx{1.4em}{#2}#3}}
+\newcommand\Bxpi[3]{\Bxp{\Bxx{#1}{#2}#3}}
+\newcommand\Bxpia[2]{\Bxp{\Bxx{0.9em}{#1}#2}}
+\newcommand\Bxpib[2]{\Bxp{\Bxx{1.4em}{#1}#2}}
 
 \newcommand\Bxy[1]{\par\parshape 1 #1 \dimexpr\linewidth-#1\relax {}}
 \newcommand\Fxb[1]{\Bxy{2em}{\linespread{0.1}\selectfont\parbox{\dimexpr\linewidth-2em}{\scriptsize#1}}}
 
 \newcommand\Fxa[1]{\unskip\nobreak\hfil\penalty50
+  \hskip2em\hbox{}\nobreak\hfil{\scriptsize#1}\parfillskip=0pt \finalhyphendemerits=0 \par}
+\newcommand\Fxc[1]{\\ \unskip\nobreak\hfil\penalty50
   \hskip2em\hbox{}\nobreak\hfil{\scriptsize#1}\parfillskip=0pt \finalhyphendemerits=0 \par}
 
 \def\theLetterSpace{-1pt}
