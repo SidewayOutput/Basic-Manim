@@ -167,7 +167,15 @@ class VMobject(Mobject):
             else:
                 array_name = "stroke_rgbas"
                 width_name = "stroke_width"
+            if opacity is not None and opacity<0:
+                opacity=-opacity
+                if self.get_stroke_opacity()>0: 
+                    opacity=None
             self.update_rgbas_array(array_name, color, opacity)
+            if width is not None and width<0:
+                width=-width
+                if self.stroke_width>0: 
+                    width=None
             if width is not None:
                 setattr(self, width_name, width)
             return self
@@ -423,6 +431,45 @@ class VMobject(Mobject):
                     submob.z_index_group = self
             return self
 
+
+        #def set_vmobj(self,args, const=0, copy=0,**kwargs):
+
+        def set0(self,args="oc", const=0, copy=0, reverse=0,**kwargs):
+            if isinstance(self,list):
+                vmobj=VGroup(*self)
+            else:
+                vmobj= self
+            if isinstance(args, (int, float)):
+                const=args
+                args="oc"
+            args=list(args)
+            for each in args:
+                if each=="o":
+                    kwargs["stroke_opacity"]=const
+                elif each=="f":
+                    kwargs["fill_opacity"]=const
+                elif each=="w":
+                    kwargs["stroke_width"]=const
+                elif each=="r":
+                    reverse=True
+                elif each=="c":
+                    copy=True
+                args=args[1:]
+            if copy:
+                vmobj= self.copy()
+            #else:
+            #    vmobj= self
+            if reverse:
+                vmobj.reverse_points()
+            return vmobj.set_style(**kwargs)
+
+        def set001(self,args="oc", const=0.01, copy=0, reverse=0,**kwargs):
+            return self.set0(args, const, copy, reverse,**kwargs)
+
+        def seto7(self, const=0.7, copy=0, reverse=0,**kwargs):
+            args="o"
+            return self.set0(args, const, copy, reverse,**kwargs)
+
     # Points of Path
     def clear_points(self):
         '''set np.array([], shape=(0, dim), dtype=float64) to VMobj.points'''
@@ -495,6 +542,12 @@ class VMobject(Mobject):
             # a new path
             self.points = self.points[:-1]
         self.add_subpath(new_points)
+        return self
+
+    def append_vectorized_mobjects(self, *vectorized_mobjects):
+        for each in vectorized_mobjects:
+            self.append_vectorized_mobject(each)
+        return self
 
     def add_cubic_bezier_curve(self, anchor1, handle1, handle2, anchor2):  # 1 path
         '''add all 4 pathpoints<anchor1, handle1, handle2, anchor2> to VMobj.points'''
@@ -622,6 +675,8 @@ class VMobject(Mobject):
     def pts(self, count=None):
         if isinstance(count, int):
             return list(self.get_counting_points()[count])
+        elif isinstance(count, float):
+            return self.point_from_proportion(count)             
         else:
             return list(self.get_counting_points())
 
@@ -1052,7 +1107,7 @@ class VMobject(Mobject):
             else:
                 return self.become(vgroup)
 
-        def split_curve(self, ratio=None, item=None, copy=False):
+        def split_curve(self, ratio=None, copy=False, item=None):
             '''ratio=None,item=None,copy=False\n
             to split on
             '''
