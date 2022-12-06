@@ -9,7 +9,8 @@ import manimlib.extract_scene
 import manimlib.stream_starter
 from manimlib.utils.sounds import play_error_sound
 from manimlib.utils.sounds import play_finish_sound
-
+global ORIENTATION
+ORIENTATION=0
 
 def get_scene_config(config):
     return dict([
@@ -35,7 +36,13 @@ def main():
     else:
         if not args.livestream:
             config = manimlib.config.get_configuration(args)
+            #print("aa",config)
+            #config["camera_config"].update({"pixel_height":854,"pixel_width":480})
+            #manimlib.constants.FRAME_WIDTH=manimlib.constants.fwidth(1/manimlib.constants.ASPECT_RATIO)
+            #manimlib.constants.FRAME_X_RADIUS=manimlib.constants.FRAME_WIDTH / 2
+            #print(manimlib.constants.FRAME_X_RADIUS)
             scene_config = get_scene_config(config)
+            #print("bb",scene_config)
             scenes = manimlib.extract_scene.main(config)
 
             for scene in scenes:
