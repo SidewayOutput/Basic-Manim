@@ -39,7 +39,7 @@ The aim of project "Basic-Manim" is to test and update basic manim features base
 
 #### Using Basic-Manim Under enviroment 'manim'
 1. Change directory to the working directory containing the unzipped 'Basic-Manim' files
-2. Run `python -m manim tutorial\basicmanim\test.py -pl` to verify the installation
+2. Run `python -m manim tutorial\basicmanim\helloworld.py -pl` to verify the installation
 
 ## License
 
