@@ -7,7 +7,7 @@ The aim of project "Basic-Manim" is to test and update basic manim features base
 ## Installation for Windows 10
 ### Download Basic-Manim
 1. Download ['Basic-Manim' files](https://github.com/SidewayOutput/Basic-Manim/archive/main.zip)
-2. Unzip 'Basic-Manim' files to a working directory
+2. Unzip 'Basic-Manim' files to a working directory. e.g. `E:\GitHub\Basic-Manim`
 
 ### System Preparation
 1. Install [ffmpeg](https://www.ffmpeg.org)
@@ -20,9 +20,9 @@ The aim of project "Basic-Manim" is to test and update basic manim features base
 #### Create a Conda Enviroment for Basic-Manim
 1. Open Anaconda Prompt
 2. Create a conda environment, 'basicmanim', using `conda create -n basicmanim python=3.8`
-3. Activate the 'manim' environment using `conda activate basicmanim`
+3. Activate the 'basicmanim' environment using `conda activate basicmanim`
 
-#### Install Python Packages Under enviroment 'manim'
+#### Install Python Packages Under enviroment 'basicmanim'
 1. pip install colour
 2. pip install numpy
 3. pip install tqdm
@@ -37,15 +37,17 @@ The aim of project "Basic-Manim" is to test and update basic manim features base
 
 ... others when necessary
 
-#### Using Basic-Manim Under enviroment 'manim'
-1. Change directory to the working directory containing the unzipped 'Basic-Manim' files
-2. Run `python -m manim project\basicmanim\helloworld.py -pl` to verify the installation
+#### Using Basic-Manim Under enviroment 'basicmanim'
+1. Change directory to the working directory containing the unzipped 'Basic-Manim' files, e.g. Run `cmd /c start /d "E:\GitHub\Basic-Manim"`
+2. Run `python -m manim project\basicmanim\helloworld.py -p` to verify the installation by previewing the `helloworld.mp4`.
+
+
 
 ## License
 
 In general,
 
-All files in the directory `manim-19Dec19-3b1b-archive` are [copyright 3Blue1Brown](https://github.com/SidewayOutput/Basic-Manim/blob/main/manim-19Dec19-3b1b-archive/LICENSE).
+All files in the directory `3b1b-archive` are [copyright 3Blue1Brown](https://github.com/SidewayOutput/Basic-Manim/blob/main/manim-19Dec19-3b1b-archive/LICENSE).
 All files in the directory `manim-01Mar21-3b1b-archive` are [copyright 3Blue1Brown](https://github.com/SidewayOutput/Basic-Manim/blob/main/manim-01Mar21-3b1b-archive/LICENSE.md).
 
 The general purpose animation code found in the remainder of the repository, on the other hand, 
