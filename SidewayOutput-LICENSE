@@ -1,5 +1,5 @@
-All files of this project under the directory "manim-19Dec19-3b1b-archive" are
-copyright (c) 2018 3Blue1Brown LLC and are provided under the MIT license. A copy 
+All files of this project under the directory "3b1b-archive" are
+opyright 3B1B](https://github.com/3b1b/manim/blob/master/LICENSE.md) and are provided under the MIT license. A copy 
 of 3b1b manimlib files under directory "manimlib" and manim.py are used/modified 
 for this project under the MIT License, copyright (c) 2018 3Blue1Brown LLC.
 
@@ -7,7 +7,7 @@ Any other file of this project is available under the MIT license as follow:
 
 MIT License
 
-Copyright (c) 2021 SidewayOutput 
+Copyright (c) 2021-2022 SidewayOutput 
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
