@@ -42,7 +42,7 @@ The aim of project "Basic-Manim" is to test and update basic manim features base
 2. Run `python -m manim project\basicmanim\helloworld.py -p` to verify the installation by previewing the `helloworld.mp4`.
 
 ## Get Started -- Introduction
-[![Watch the video](https://img.youtube.com/vi/n4zJOh6AXo8/0.jpg)](https://www.youtube.com/watch?v=n4zJOh6AXo8)
+[![Watch the video](https://img.youtube.com/vi/n4zJOh6AXo8/0.jpg)]([https://www.youtube.com/watch?v=n4zJOh6AXo8])
 
 ## License
 
