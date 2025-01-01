@@ -33,7 +33,7 @@ The aim of project "Basic-Manim" is to test and update basic manim features base
 8. pip install pyreadline
 9. pip install opencv-python
 10. pip install PyYAML
-11. pip install manimpango
+11. pip install manimpango (or conda install conda-forge::manimpango to fix error)
 
 ... others when necessary
 
